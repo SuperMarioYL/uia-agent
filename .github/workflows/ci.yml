@@ -1,0 +1,56 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    # Matrix:
+    #   - ubuntu-latest: pure logic + pruning tests (uiautomation/pywinauto skip via marker)
+    #   - windows-latest: same suite + windows_only integration tests
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Python 3.12
+        run: uv python install 3.12
+
+      - name: Install dependencies (Linux — skip Windows-only deps)
+        if: matrix.os != 'windows-latest'
+        run: |
+          uv venv
+          uv pip install --no-deps anthropic "openai>=1.50" "typer>=0.12" "pydantic>=2.8" pytest
+          uv pip install -e . --no-deps
+
+      - name: Install dependencies (Windows — full)
+        if: matrix.os == 'windows-latest'
+        run: |
+          uv venv
+          uv pip install -e ".[dev]"
+
+      - name: Lint
+        run: uv run ruff check src tests
+
+      - name: Test (skip windows_only on Linux)
+        if: matrix.os != 'windows-latest'
+        run: uv run pytest -m "not windows_only"
+
+      - name: Test (full suite on Windows)
+        if: matrix.os == 'windows-latest'
+        run: uv run pytest
