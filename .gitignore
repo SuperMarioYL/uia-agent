@@ -46,3 +46,12 @@ Thumbs.db
 # Project-local agent caches
 .claude/
 CLAUDE.md
+
+# ai-radar build orchestration metadata (not source)
+.build_metadata.yaml
+.build_metadata.slices.yaml
+.builder_prompt_*.md
+.stage_*.result.json
+.stage_*.stderr.log
+.spawn.*.stdout.log
+.spawn.*.stderr.log
