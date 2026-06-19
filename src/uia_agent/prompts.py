@@ -7,7 +7,6 @@ seven action kinds; the user turn carries the live tree + history.
 
 from __future__ import annotations
 
-
 _SYSTEM_PROMPT = """\
 You drive a single Windows desktop application by emitting one Action per turn
 against its UI Automation (UIA) accessibility tree.

@@ -20,7 +20,9 @@ from uia_agent.actions import (
 from uia_agent.uia_tree import UIANode
 
 
-def _leaf(node_id: str, *, role: str = "Button", name: str | None = "OK", enabled: bool = True) -> UIANode:
+def _leaf(
+    node_id: str, *, role: str = "Button", name: str | None = "OK", enabled: bool = True
+) -> UIANode:
     return UIANode(
         id=node_id,
         role=role,

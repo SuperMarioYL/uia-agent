@@ -21,7 +21,6 @@ from typing import Any, Protocol
 
 from .actions import Action
 
-
 ACTION_JSON_SCHEMA: dict[str, Any] = {
     "type": "object",
     "additionalProperties": False,

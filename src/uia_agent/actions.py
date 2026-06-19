@@ -7,13 +7,13 @@ and the surface the agent loop dispatches through.
 
 from __future__ import annotations
 
+import contextlib
 import time
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
 from .uia_tree import UIANode, _find_window
-
 
 ActionKind = Literal["click", "type", "select", "expand", "key", "wait", "done"]
 
@@ -168,10 +168,8 @@ def _do_type(control: Any, text: str) -> None:
 
     set_focus = getattr(control, "SetFocus", None)
     if set_focus is not None:
-        try:
+        with contextlib.suppress(Exception):
             set_focus()
-        except Exception:
-            pass
 
     import uiautomation as auto
 

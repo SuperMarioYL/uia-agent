@@ -22,7 +22,6 @@ from .llm import LLMClient, default_client
 from .prompts import system_prompt, user_turn
 from .uia_tree import UIANode, snapshot, to_json
 
-
 MAX_STEPS_DEFAULT = 25
 SETTLE_SECONDS = 0.4
 

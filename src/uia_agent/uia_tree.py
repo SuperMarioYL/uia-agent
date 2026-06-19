@@ -55,7 +55,7 @@ class UIANode(BaseModel):
         default_factory=list,
         description="UIA control patterns the node exposes, e.g. ['Invoke', 'Value'].",
     )
-    children: list["UIANode"] = Field(default_factory=list)
+    children: list[UIANode] = Field(default_factory=list)
 
 
 UIANode.model_rebuild()
@@ -65,7 +65,9 @@ class SnapshotError(RuntimeError):
     """Raised when the UIA tree cannot be captured."""
 
 
-def _stable_id(role: str, name: str | None, automation_id: str | None, depth_path: tuple[int, ...]) -> str:
+def _stable_id(
+    role: str, name: str | None, automation_id: str | None, depth_path: tuple[int, ...]
+) -> str:
     payload = json.dumps(
         {"r": role, "n": name or "", "a": automation_id or "", "p": list(depth_path)},
         ensure_ascii=False,
@@ -79,9 +81,7 @@ def _is_offscreen(bbox: tuple[int, int, int, int]) -> bool:
     if right <= left or bottom <= top:
         return True
     # Heuristic: a node positioned far outside any plausible screen is offscreen.
-    if right < 0 or bottom < 0 or left > 32_000 or top > 32_000:
-        return True
-    return False
+    return right < 0 or bottom < 0 or left > 32_000 or top > 32_000
 
 
 def _patterns_for(control: Any) -> list[str]:

@@ -16,9 +16,8 @@ from typing import Annotated
 import typer
 
 from . import __version__
-from .agent import AgentBudgetExceeded, MAX_STEPS_DEFAULT, run
+from .agent import MAX_STEPS_DEFAULT, AgentBudgetExceeded, run
 from .uia_tree import count_nodes, snapshot, to_json
-
 
 app = typer.Typer(
     add_completion=False,

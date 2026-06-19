@@ -34,7 +34,7 @@ class FakeControl:
         automation_id: str = "",
         enabled: bool = True,
         bbox: tuple[int, int, int, int] = (10, 10, 100, 50),
-        children: list["FakeControl"] | None = None,
+        children: list[FakeControl] | None = None,
         is_control_element: bool = True,
         value: str | None = None,
         patterns: tuple[str, ...] = (),
@@ -49,7 +49,7 @@ class FakeControl:
         self._value = value
         self._patterns = set(patterns)
 
-    def GetChildren(self) -> list["FakeControl"]:
+    def GetChildren(self) -> list[FakeControl]:
         return self._children
 
     def GetInvokePattern(self) -> object | None:
@@ -173,7 +173,7 @@ def test_to_json_is_valid_and_excludes_none() -> None:
     root = FakeControl(
         role="Window",
         name="App",
-        children=[_btn("OK", patterns=("Invoke",))],
+        children=[_btn("OK")],
     )
     snap = snapshot_from(root)
     blob = to_json(snap)
