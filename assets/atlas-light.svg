@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 360" width="880" height="360"
+     font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif"
+     role="img" aria-label="uia-agent architecture: a natural-language goal enters the Typer CLI, which runs the observe-think-act loop; each step snapshots and prunes the Windows UIA tree, asks the LLM shim for one structured Action, and dispatches it through a real UIA control pattern back into the live desktop app">
+  <defs>
+    <marker id="ah-l" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#B9B9C2"/></marker>
+  </defs>
+  <rect x="0" y="0" width="880" height="360" fill="#F5F5F7"/>
+
+  <!-- loop frame -->
+  <rect x="232" y="64" width="416" height="262" rx="18" fill="none" stroke="#5E5CE6" stroke-opacity="0.40" stroke-width="1.5" stroke-dasharray="6 5"/>
+  <text x="252" y="86" font-size="13" font-weight="600" fill="#4B3FC4">observe → think → act loop · 25-step budget · ~700 LOC, no framework</text>
+
+  <!-- connectors -->
+  <g stroke="#C9C9D0" stroke-width="1.6" fill="none">
+    <line x1="200" y1="196" x2="252" y2="196" marker-end="url(#ah-l)"/>
+    <line x1="628" y1="196" x2="680" y2="196" marker-end="url(#ah-l)"/>
+    <!-- act feedback back to app and re-observe -->
+    <line x1="765" y1="266" x2="765" y2="290" />
+    <line x1="765" y1="290" x2="125" y2="290" />
+    <line x1="125" y1="290" x2="125" y2="232" marker-end="url(#ah-l)"/>
+  </g>
+  <text x="430" y="308" text-anchor="middle" font-size="11.5" fill="#6E6E73">re-snapshot the tree after each dispatched action</text>
+
+  <!-- CLI -->
+  <g>
+    <rect x="32" y="108" width="168" height="120" rx="15" fill="#0071E3" fill-opacity="0.10" stroke="#0071E3" stroke-width="1.5"/>
+    <text x="116" y="134" text-anchor="middle" font-size="15" font-weight="600" fill="#0A4F9E">CLI · Typer</text>
+    <g font-size="11.5" fill="#0A4F9E">
+      <rect x="48" y="148" width="136" height="30" rx="8" fill="#0071E3" fill-opacity="0.10" stroke="#0071E3" stroke-width="1.1"/>
+      <text x="60" y="167">run --app "&lt;goal&gt;"</text>
+      <rect x="48" y="184" width="136" height="30" rx="8" fill="#0071E3" fill-opacity="0.07" stroke="#0071E3" stroke-width="1.1"/>
+      <text x="60" y="203">dump --app  (debug)</text>
+    </g>
+  </g>
+
+  <!-- Agent loop core -->
+  <g>
+    <rect x="252" y="100" width="244" height="208" rx="15" fill="#5E5CE6" fill-opacity="0.10" stroke="#5E5CE6" stroke-width="1.6"/>
+    <text x="374" y="126" text-anchor="middle" font-size="16" font-weight="700" fill="#4B3FC4">agent.py — loop</text>
+    <g font-size="12.5">
+      <rect x="272" y="140" width="204" height="34" rx="9" fill="#FFFFFF" fill-opacity="0.6" stroke="#5E5CE6" stroke-width="1.1"/>
+      <text x="286" y="162" fill="#3a356e"><tspan font-weight="700" fill="#4B3FC4">1</tspan>  observe — snapshot UIA tree</text>
+      <rect x="272" y="180" width="204" height="34" rx="9" fill="#FFFFFF" fill-opacity="0.6" stroke="#5E5CE6" stroke-width="1.1"/>
+      <text x="286" y="202" fill="#3a356e"><tspan font-weight="700" fill="#4B3FC4">2</tspan>  think — ask LLM for 1 Action</text>
+      <rect x="272" y="220" width="204" height="34" rx="9" fill="#FFFFFF" fill-opacity="0.6" stroke="#5E5CE6" stroke-width="1.1"/>
+      <text x="286" y="242" fill="#3a356e"><tspan font-weight="700" fill="#4B3FC4">3</tspan>  act — dispatch via pattern</text>
+      <rect x="272" y="260" width="204" height="34" rx="9" fill="#FFFFFF" fill-opacity="0.6" stroke="#5E5CE6" stroke-width="1.1"/>
+      <text x="286" y="282" fill="#3a356e"><tspan font-weight="700" fill="#4B3FC4">4</tspan>  verify — stream step, repeat</text>
+    </g>
+  </g>
+
+  <!-- LLM shim -->
+  <g>
+    <rect x="512" y="100" width="124" height="96" rx="15" fill="#5E5CE6" fill-opacity="0.08" stroke="#5E5CE6" stroke-width="1.5"/>
+    <text x="574" y="126" text-anchor="middle" font-size="14" font-weight="600" fill="#4B3FC4">llm.py · shim</text>
+    <g font-size="11.5" font-weight="600">
+      <rect x="526" y="138" width="96" height="22" rx="7" fill="#5E5CE6" fill-opacity="0.14" stroke="#5E5CE6" stroke-width="1.1"/>
+      <text x="574" y="153" text-anchor="middle" fill="#4B3FC4">Anthropic</text>
+      <rect x="526" y="166" width="96" height="22" rx="7" fill="#5E5CE6" fill-opacity="0.10" stroke="#5E5CE6" stroke-width="1.1"/>
+      <text x="574" y="181" text-anchor="middle" fill="#4B3FC4">OpenAI</text>
+    </g>
+  </g>
+  <text x="574" y="216" text-anchor="middle" font-size="10.5" fill="#6E6E73">structured output</text>
+  <text x="574" y="230" text-anchor="middle" font-size="10.5" fill="#6E6E73">(tool-use / JSON-schema)</text>
+
+  <!-- think connector loop core <-> shim -->
+  <g stroke="#C9C9D0" stroke-width="1.4" fill="none">
+    <line x1="496" y1="160" x2="512" y2="148" marker-end="url(#ah-l)"/>
+    <line x1="512" y1="172" x2="496" y2="184" marker-end="url(#ah-l)"/>
+  </g>
+
+  <!-- Windows desktop / UIA -->
+  <g>
+    <rect x="680" y="100" width="168" height="166" rx="15" fill="#10A37F" fill-opacity="0.08" stroke="#10A37F" stroke-width="1.5"/>
+    <text x="764" y="126" text-anchor="middle" font-size="15" font-weight="600" fill="#0B6B53">Windows app</text>
+    <text x="764" y="143" text-anchor="middle" font-size="11" fill="#0B6B53">via UIA accessibility tree</text>
+    <g font-size="11" fill="#0B6B53">
+      <rect x="696" y="152" width="136" height="24" rx="7" fill="#10A37F" fill-opacity="0.14" stroke="#10A37F" stroke-width="1.1"/>
+      <text x="708" y="168">uia_tree · prune ≤400</text>
+      <rect x="696" y="182" width="136" height="24" rx="7" fill="#10A37F" fill-opacity="0.12" stroke="#10A37F" stroke-width="1.1"/>
+      <text x="708" y="198">Invoke / Value</text>
+      <rect x="696" y="212" width="136" height="24" rx="7" fill="#10A37F" fill-opacity="0.10" stroke="#10A37F" stroke-width="1.1"/>
+      <text x="708" y="228">SelectionItem / Expand</text>
+    </g>
+  </g>
+</svg>

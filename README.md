@@ -29,15 +29,28 @@
 
 ## 目录
 
+- [架构](#架构)
 - [快速上手](#快速上手)
+- [演示](#演示)
 - [它实际做了什么](#它实际做了什么)
 - [和现有方案对比](#和现有方案对比)
 - [配置](#配置)
-- [架构](#架构)
 - [路线图](#路线图)
 - [诚实的局限](#诚实的局限)
 - [相关项目](#相关项目)
 - [许可证 + 贡献](#许可证--贡献)
+
+## <img src="https://api.iconify.design/tabler/topology-star-3.svg?color=%238B5CF6" width="20" height="20" align="center" /> 架构
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./assets/atlas-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="./assets/atlas-light.svg">
+    <img src="./assets/atlas-light.svg" width="880" alt="自然语言目标进入 Typer CLI，CLI 运行 observe → think → act 循环：每一步快照并剪枝 Windows UIA 树，向 LLM 适配层要一个结构化 Action，再通过真实 UIA 控件模式分发回正在运行的桌面软件">
+  </picture>
+</p>
+
+自然语言目标进入 **Typer CLI**（`run`），CLI 启动 **agent 循环**：① *observe* — 快照当前焦点窗口的 UIA 树并剪枝到 ≤400 节点；② *think* — 把序列化后的树交给 **LLM 适配层**（Anthropic tool-use 或 OpenAI JSON-schema），拿回恰好一个结构化 `Action`；③ *act* — 通过真实 UIA 控件模式（Invoke / Value / SelectionItem / ExpandCollapse）把动作分发回正在运行的 **Windows 软件**；④ *verify* — 流式打出这一步并重新快照。没有服务、没有 daemon、没有 IPC——一个进程跑完，约 700 行 Python。
 
 ## 快速上手
 
@@ -50,8 +63,6 @@ uia-agent run --app Notepad "输入 'hello world'，存到桌面，文件名 hel
 ```
 
 完事。agent 会一行一行打出每一步：它选了什么动作、目标节点是哪个、为什么——直到它输出 `done` 或者用完 step 预算为止。
-
-> 📼 演示动图待录制——录制脚本见 [`assets/demo.tape`](./assets/demo.tape)（vhs）。
 
 <details>
 <summary>典型输出</summary>
@@ -72,6 +83,14 @@ step 06  done                                  ✓ agent reported done
 ```
 
 </details>
+
+## <img src="https://api.iconify.design/tabler/photo.svg?color=%238B5CF6" width="20" height="20" align="center" /> 演示
+
+一句话进去，agent 先 dump 出 Notepad 剪枝后的 UIA 树，再端到端驱动它——聚焦编辑区、输入、调出"另存为"对话框、填文件名、点保存——全程一行一行流式打出每一步。
+
+<p align="center">
+  <img src="./assets/demo.gif" alt="uia-agent 在 Notepad 上 dump + run 的终端演示" width="820" />
+</p>
 
 ## 它实际做了什么
 
@@ -118,31 +137,6 @@ uia-agent dump --app Notepad --indent 0
 uia-agent run  --app Calculator --max-steps 15 "算一下 17 * 23"
 ```
 
-## 架构
-
-```
-┌──────────────────────────────────────────────────┐
-│  cli.py  (Typer)                                 │
-│     run  --app <name> "<instruction>"            │
-│     dump --app <name>  (调试用)                  │
-└──────────────────────┬───────────────────────────┘
-                       │
-              ┌────────▼─────────┐    ┌─────────────────┐
-              │  agent.py        │◄──►│  llm.py         │
-              │  observe → think │    │  Anthropic /    │
-              │  → act → verify  │    │  OpenAI 适配层  │
-              └────┬─────┬───────┘    └─────────────────┘
-                   │     │
-        ┌──────────▼┐  ┌─▼──────────────┐
-        │ uia_tree  │  │ actions.py     │
-        │ 抓取 +    │  │ Invoke/Value/  │
-        │ 剪枝       │  │ SetText/Keys/  │
-        └───────────┘  │ Expand          │
-                       └────────────────┘
-```
-
-没有服务、没有 daemon、没有 IPC。一个进程跑完。
-
 ## 路线图
 
 - [x] **m1** — `uia-agent dump` 把任意 Windows 焦点窗口的 UIA 树剪枝后打成 JSON。
@@ -179,4 +173,4 @@ gh repo edit --add-topic agent --add-topic windows --add-topic uia \
 
 ---
 
-<sub>由 [@supermario-leo](https://github.com/supermario-leo) 公开维护。本仓库由 [ai-radar](https://github.com/supermario-leo/ai-radar) 从一份哈希锁定的 MVP plan 生成。</sub>
+<sub>MIT © 2026 supermario-leo · 由 [@supermario-leo](https://github.com/supermario-leo) 公开维护。</sub>

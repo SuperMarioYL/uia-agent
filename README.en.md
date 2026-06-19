@@ -36,16 +36,29 @@ pip install, two CLI commands, ~700 LOC, and the agent goes from `pip` to
 
 ## Table of contents
 
+- [Architecture](#architecture)
 - [Quickstart](#quickstart)
+- [Demo](#demo)
 - [What it actually does](#what-it-actually-does)
 - [How it compares](#how-it-compares)
 - [Configuration](#configuration)
-- [Architecture](#architecture)
 - [Roadmap](#roadmap)
 - [Honest caveats](#honest-caveats)
 - [Related work](#related-work)
 - [License + Contributing](#license--contributing)
 - [Share this](#share-this)
+
+## <img src="https://api.iconify.design/tabler/topology-star-3.svg?color=%238B5CF6" width="20" height="20" align="center" /> Architecture
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./assets/atlas-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="./assets/atlas-light.svg">
+    <img src="./assets/atlas-light.svg" width="880" alt="A natural-language goal enters the Typer CLI, which runs the observe → think → act loop; each step snapshots and prunes the Windows UIA tree, asks the LLM shim for one structured Action, and dispatches it through a real UIA control pattern back into the live desktop app">
+  </picture>
+</p>
+
+A natural-language goal enters the **Typer CLI** (`run`), which spins the **agent loop**: ① *observe* — snapshot the focused window's UIA tree and prune it to ≤400 nodes; ② *think* — hand the serialized tree to the **LLM shim** (Anthropic tool-use or OpenAI JSON-schema) and get back exactly one structured `Action`; ③ *act* — dispatch that action through a real UIA control pattern (Invoke / Value / SelectionItem / ExpandCollapse) into the live **Windows app**; ④ *verify* — stream the step and re-snapshot. No services, no daemon, no IPC — one process, ~700 lines of Python.
 
 ## Quickstart
 
@@ -60,9 +73,6 @@ uia-agent run --app Notepad "type 'hello world' and save it as hello.txt on the 
 
 That's it. The agent streams one line per step — the action it chose, the
 target node, and why — until it emits `done` or hits the step budget.
-
-> Demo coming soon — see [`assets/demo.tape`](./assets/demo.tape) for the vhs
-> recording script.
 
 <details>
 <summary>Sample output</summary>
@@ -83,6 +93,14 @@ step 06  done                                  ✓ agent reported done
 ```
 
 </details>
+
+## <img src="https://api.iconify.design/tabler/photo.svg?color=%238B5CF6" width="20" height="20" align="center" /> Demo
+
+One sentence in, the agent dumps Notepad's pruned UIA tree, then drives the app end-to-end — focuses the editor, types, opens the Save dialog, fills the file name, and clicks Save — streaming one line per step the whole way.
+
+<p align="center">
+  <img src="./assets/demo.gif" alt="uia-agent dump + run terminal demo on Notepad" width="820" />
+</p>
 
 ## What it actually does
 
@@ -135,31 +153,6 @@ uia-agent dump --app Notepad --indent 0
 uia-agent run  --app Calculator --max-steps 15 "compute 17 * 23"
 ```
 
-## Architecture
-
-```
-┌──────────────────────────────────────────────────┐
-│  cli.py  (Typer)                                 │
-│     run  --app <name> "<instruction>"            │
-│     dump --app <name>  (debug aid)               │
-└──────────────────────┬───────────────────────────┘
-                       │
-              ┌────────▼─────────┐    ┌─────────────────┐
-              │  agent.py        │◄──►│  llm.py         │
-              │  observe → think │    │  Anthropic /    │
-              │  → act → verify  │    │  OpenAI shim    │
-              └────┬─────┬───────┘    └─────────────────┘
-                   │     │
-        ┌──────────▼┐  ┌─▼──────────────┐
-        │ uia_tree  │  │ actions.py     │
-        │ snapshot  │  │ Invoke/Value/  │
-        │ + prune   │  │ SetText/Keys/  │
-        └───────────┘  │ Expand         │
-                       └────────────────┘
-```
-
-No services, no daemon, no IPC. One process, ~700 lines of Python.
-
 ## Roadmap
 
 - [x] **m1** — `uia-agent dump` prints the pruned UIA tree as JSON for any focused Windows app.
@@ -206,4 +199,4 @@ MIT, BYO API key. https://github.com/supermario-leo/uia-agent
 
 ---
 
-<sub>Built openly by [@supermario-leo](https://github.com/supermario-leo). Generated from a hash-locked MVP plan via [ai-radar](https://github.com/supermario-leo/ai-radar).</sub>
+<sub>MIT © 2026 supermario-leo · Built openly by [@supermario-leo](https://github.com/supermario-leo).</sub>

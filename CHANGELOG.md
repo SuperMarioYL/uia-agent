@@ -29,7 +29,7 @@ Initial public release. Three milestones land together.
 
 ### m3 — demo + benchmark scaffolding
 - Bundled examples: `examples/notepad_demo.py`, `examples/calculator_demo.py`.
-- `assets/demo.tape` script for the README screencap (vhs).
+- `docs/demo.tape` script for the README screencap (vhs).
 - `BENCHMARK.md` shape will land alongside the first benchmark run; see
   [README §Roadmap](./README.md#roadmap).
 
