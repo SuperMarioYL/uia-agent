@@ -15,6 +15,7 @@ from uia_agent.actions import (
     ActionError,
     ActionResult,
     dispatch,
+    escape_sendkeys,
     index_tree,
 )
 from uia_agent.uia_tree import UIANode
@@ -108,6 +109,38 @@ def test_key_action_requires_text() -> None:
     snap = _tree()
     with pytest.raises(ActionError, match="non-empty text"):
         dispatch(Action(kind="key", reason="shortcut"), snap, app="App")
+
+
+def test_escape_sendkeys_wraps_every_metacharacter() -> None:
+    # Each of { } ( ) + ^ % ~ must be wrapped as {c} so SendKeys sends it
+    # literally instead of interpreting it as a control sequence.
+    assert escape_sendkeys("{") == "{{}"
+    assert escape_sendkeys("}") == "{}}"
+    assert escape_sendkeys("(") == "{(}"
+    assert escape_sendkeys(")") == "{)}"
+    assert escape_sendkeys("+") == "{+}"
+    assert escape_sendkeys("^") == "{^}"
+    assert escape_sendkeys("%") == "{%}"
+    assert escape_sendkeys("~") == "{~}"
+
+
+def test_escape_sendkeys_translates_newlines_to_enter() -> None:
+    assert escape_sendkeys("a\nb") == "a{Enter}b"
+    # CRLF and bare CR fold to a single {Enter} each.
+    assert escape_sendkeys("a\r\nb") == "a{Enter}b"
+    assert escape_sendkeys("a\rb") == "a{Enter}b"
+
+
+def test_escape_sendkeys_leaves_plain_text_untouched() -> None:
+    assert escape_sendkeys("hello world.txt") == "hello world.txt"
+
+
+def test_escape_sendkeys_round_trips_a_multiline_special_char_payload() -> None:
+    # The headline haiku-with-punctuation case: every metacharacter wrapped,
+    # every newline → {Enter}, byte-for-byte.
+    payload = "f(x)+y^2 {note}\n100% done~"
+    expected = "f{(}x{)}{+}y{^}2 {{}note{}}{Enter}100{%} done{~}"
+    assert escape_sendkeys(payload) == expected
 
 
 @pytest.mark.windows_only

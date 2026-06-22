@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "uia-agent"
-version = "0.1.0"
+version = "0.2.0"
 description = "Open-source LLM agent action space for driving legacy Windows thick-client apps via the UIA accessibility tree."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -44,6 +44,17 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# Framework adapter layer — installs LangChain so the uia-agent tools plug into
+# a LangChain agent. The core stays dependency-free; this is opt-in.
+langchain = [
+    "langchain-core>=0.3,<1.0",
+]
+# OCR + bbox vision fallback — used only when the pruned UIA tree yields zero
+# actionable nodes. Needs the Tesseract binary on PATH at runtime.
+vision = [
+    "pytesseract>=0.3.10,<0.4",
+    "pillow>=10.0,<12.0",
+]
 dev = [
     "pytest>=8.0",
     "pytest-cov>=5.0",
@@ -67,6 +78,8 @@ include = [
     "src/uia_agent",
     "README.md",
     "README.en.md",
+    "BENCHMARK.md",
+    "CHANGELOG.md",
     "LICENSE",
     "examples",
     "tests",

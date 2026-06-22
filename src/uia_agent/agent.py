@@ -14,10 +14,11 @@ from __future__ import annotations
 import time
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
+from typing import Any
 
 from pydantic import BaseModel
 
-from .actions import Action, ActionError, ActionResult, dispatch
+from .actions import Action, ActionError, ActionResult, click_point, dispatch
 from .llm import LLMClient, default_client
 from .prompts import system_prompt, user_turn
 from .uia_tree import UIANode, snapshot, to_json
@@ -48,6 +49,33 @@ class AgentBudgetExceeded(RuntimeError):
     """Raised when the step budget runs out before the LLM emits `done`."""
 
 
+def _vision_fallback_event(
+    app: str, step: int, *, ocr: Any = None, screenshotter: Any = None
+) -> StepEvent | None:
+    """Build a coordinate-click StepEvent from the OCR fallback, or ``None``.
+
+    Called only when ``vision`` is enabled and the pruned UIA tree exposed zero
+    actionable nodes. Imports :mod:`uia_agent.vision` lazily so the optional
+    extra never loads on the UIA-first path. Returns ``None`` when OCR finds no
+    clickable text, letting the caller fall through to the normal LLM step.
+    """
+    from .vision import fallback_regions
+
+    regions = fallback_regions(app, ocr=ocr, screenshotter=screenshotter)
+    if not regions:
+        return None
+    region = max(regions, key=lambda r: r.confidence)
+    x, y = region.center
+    action = Action(
+        kind="click",
+        target_id=None,
+        text=None,
+        reason=f"UIA tree had no actionable nodes; clicking OCR region {region.text!r}",
+    )
+    result = click_point(x, y)
+    return StepEvent(index=step, action=action, result=result, error=None)
+
+
 def run(
     app: str,
     instruction: str,
@@ -56,18 +84,49 @@ def run(
     llm: LLMClient | None = None,
     snapshotter: Callable[[str], UIANode] = snapshot,
     settle_seconds: float = SETTLE_SECONDS,
+    vision: bool = False,
+    ocr: Any = None,
+    screenshotter: Any = None,
 ) -> Iterator[StepEvent]:
     """Drive ``app`` toward ``instruction``, yielding one StepEvent per step.
 
     The function is a generator so the CLI can stream progress live. It
     exhausts on either an emitted `done` action or a raised exception; the
     caller decides whether to bail or keep going on per-step errors.
+
+    When ``vision`` is True, a step whose pruned UIA tree exposes zero
+    actionable nodes falls back to the OCR + bbox path in :mod:`uia_agent.vision`
+    (the optional ``[vision]`` extra) instead of forcing the LLM to choose from
+    an empty tree. The UIA-first path is unchanged: as long as the tree has any
+    actionable node, vision is never consulted. ``ocr`` injects a stub OCR
+    engine for testing.
     """
     client = llm or default_client()
     history: list[StepRecord] = []
 
     for step in range(1, max_steps + 1):
         tree = snapshotter(app)
+
+        if vision:
+            from .vision import tree_has_actionable_nodes
+
+            if not tree_has_actionable_nodes(tree):
+                event = _vision_fallback_event(
+                    app, step, ocr=ocr, screenshotter=screenshotter
+                )
+                if event is not None:
+                    history.append(
+                        StepRecord(
+                            index=step,
+                            action=event.action,
+                            result=event.result or ActionResult(ok=True),
+                        )
+                    )
+                    yield event
+                    if settle_seconds > 0:
+                        time.sleep(settle_seconds)
+                    continue
+
         tree_json = to_json(tree, indent=None)
         history_json = _history_json(history)
 

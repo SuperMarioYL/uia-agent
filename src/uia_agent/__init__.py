@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .actions import Action, ActionError, ActionResult, dispatch
+from .actions import Action, ActionError, ActionResult, dispatch, escape_sendkeys
 from .agent import AgentBudgetExceeded, StepEvent, StepRecord, run
 from .llm import LLMClient, default_client
 from .uia_tree import (
@@ -16,7 +16,7 @@ from .uia_tree import (
     to_json,
 )
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "Action",
@@ -34,6 +34,7 @@ __all__ = [
     "count_nodes",
     "default_client",
     "dispatch",
+    "escape_sendkeys",
     "run",
     "snapshot",
     "snapshot_from",

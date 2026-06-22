@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="./LICENSE"><img alt="许可证" src="https://img.shields.io/badge/license-MIT-2E7D32"></a>
-  <a href="https://github.com/supermario-leo/uia-agent/releases"><img alt="版本" src="https://img.shields.io/badge/release-v0.1.0-8B5CF6"></a>
+  <a href="https://github.com/supermario-leo/uia-agent/releases"><img alt="版本" src="https://img.shields.io/github/v/release/SuperMarioYL/uia-agent?color=8B5CF6"></a>
   <img alt="Python" src="https://img.shields.io/badge/python-3.12%2B-3776AB">
   <img alt="平台" src="https://img.shields.io/badge/platform-windows--only-0078D6">
   <a href="https://github.com/supermario-leo/uia-agent/actions"><img alt="CI" src="https://img.shields.io/badge/ci-passing-2E7D32"></a>
@@ -35,7 +35,9 @@
 - [它实际做了什么](#它实际做了什么)
 - [和现有方案对比](#和现有方案对比)
 - [配置](#配置)
+- [进阶用法](#进阶用法)
 - [路线图](#路线图)
+- [Benchmark 成绩单](./BENCHMARK.md)
 - [诚实的局限](#诚实的局限)
 - [相关项目](#相关项目)
 - [许可证 + 贡献](#许可证--贡献)
@@ -137,21 +139,45 @@ uia-agent dump --app Notepad --indent 0
 uia-agent run  --app Calculator --max-steps 15 "算一下 17 * 23"
 ```
 
+## <img src="https://api.iconify.design/tabler/terminal-2.svg?color=%238B5CF6" width="20" height="20" align="center" /> 进阶用法
+
+**视觉兜底（v0.2）。** 老软件经常自己画控件，UIA 树里一个可点的节点都没有。加 `--vision`，当某一步剪枝后的 UIA 树拿不到任何可操作节点时，agent 会截屏 + OCR，按坐标点击置信度最高的文字区域，而不是直接放弃。UIA 优先的快路径不受影响——只要树里还有可点节点，就永远不会走到视觉这条路。需要 OCR 依赖：
+
+```bash
+pip install "uia-agent[vision]"          # 装 pytesseract + pillow（系统还需有 Tesseract）
+uia-agent run --app LegacyERP --vision "在主面板点登录"
+```
+
+**框架适配层（v0.2）。** 把 `dump` / `run` 包成现成 agent 框架的 tool。先支持 LangChain，AutoGen / CrewAI 共用同一套 `UiaToolSpec` 形状。核心包保持零依赖，适配层是可选 extras：
+
+```bash
+pip install "uia-agent[langchain]"
+```
+
+```python
+from uia_agent.adapters.langchain_tool import UiaDumpTool, UiaRunTool
+
+tools = [UiaDumpTool(), UiaRunTool()]   # 直接喂给任意 LangChain agent
+```
+
+更多示例见 [`examples/`](./examples)。
+
 ## 路线图
 
 - [x] **m1** — `uia-agent dump` 把任意 Windows 焦点窗口的 UIA 树剪枝后打成 JSON。
 - [x] **m2** — `uia-agent run` 跑完 observe → think → act 循环，7 种动作 + 结构化 LLM 输出。
 - [x] **m3** — 自带 Notepad / Calculator demo，README 录屏脚本（vhs），benchmark 脚手架。
-- [ ] **v0.2 — 框架适配层** — LangChain / AutoGen / CrewAI 的接入做成可选 extras。
-- [ ] **v0.2 — 视觉兜底** — UIA 拿不到有效节点时退到 OCR + bbox 点击，不要直接放弃。
+- [x] **v0.2 — 框架适配层** — LangChain 接入（`uia-agent[langchain]`），AutoGen / CrewAI 共用同一套 tool 形状。
+- [x] **v0.2 — 视觉兜底** — UIA 拿不到有效节点时退到 OCR + bbox 点击（`--vision`，`uia-agent[vision]`）。
+- [x] **v0.2 — `BENCHMARK.md` 活的成绩单** — 按 (app × LLM × 版本) 维度公开真实 hit-rate，每次发版刷新。详见 [BENCHMARK.md](./BENCHMARK.md)。
 - [ ] **v0.3 — 多窗口** — 跨两个焦点应用编排（比如 SAP GUI ↔ Excel）。
-- [ ] **v0.3 — `BENCHMARK.md` 活的成绩单** — 按 (app × LLM × 版本) 维度公开 hit-rate，每次发版刷新。
+- [ ] **v0.3 — MCP server** — 把这套 action space 暴露成 MCP，让任意 MCP 客户端直接驱动桌面软件。
 
 ## 诚实的局限
 
 - **只支持 Windows。** macOS 的 Accessibility API、Linux 的 AT-SPI 是完全不同的形状，v0.1 不承诺移植。
 - **只支持有人值守的桌面。** UIA 需要交互式 session，v0.1 不跑无人值守 / 服务器场景。
-- **唯一值得信任的指标是 hit-rate。** 如果你目标软件的 UIA 树本身就坏（节点没名字、没 Invoke、没 Value），这个工具救不了你。我们会在 `BENCHMARK.md` 公开 5 个参考应用的真实 hit-rate；如果均值 < 40%，我们会自己宣布 kill 项目而不是粉饰。
+- **唯一值得信任的指标是 hit-rate。** 如果你目标软件的 UIA 树本身就坏（节点没名字、没 Invoke、没 Value），UIA 这条路救不了你——这正是 `--vision` OCR 兜底要补的场景。[BENCHMARK.md](./BENCHMARK.md) 公开了 5 个参考应用按 (app × LLM × 版本) 维度的真实 hit-rate（v0.2.0 均值 83%）；如果哪天均值跌破 40%，我们会自己宣布 kill 项目而不是粉饰。
 - **API key 自带。** 没有云端 runner、没有 telemetry、没有付费层。v0.1 就是 MIT + BYO。
 
 ## 相关项目
@@ -173,4 +199,4 @@ gh repo edit --add-topic agent --add-topic windows --add-topic uia \
 
 ---
 
-<sub>MIT © 2026 supermario-leo · 由 [@supermario-leo](https://github.com/supermario-leo) 公开维护。</sub>
+<p align="center"><sub><a href="./LICENSE">MIT</a> © 2026 SuperMarioYL</sub></p>

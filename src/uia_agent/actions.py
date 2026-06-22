@@ -155,12 +155,41 @@ def _do_click(control: Any) -> None:
         click()
 
 
+# `uiautomation.SendKeys` treats these characters as the start of a special
+# sequence; to send them literally each must be wrapped as `{c}`. Newlines have
+# no literal form at all and must be translated to the `{Enter}` token.
+_SENDKEYS_META = frozenset("{}()+^%~")
+
+
+def escape_sendkeys(text: str) -> str:
+    """Escape SendKeys metacharacters and translate newlines to ``{Enter}``.
+
+    `uiautomation.SendKeys` interprets ``{ } ( ) + ^ % ~`` as control sequences
+    and silently drops/garbles them otherwise; ``\\n`` is not a literal newline
+    there either. This makes an arbitrary ``type`` payload (e.g. a multi-line
+    haiku with parentheses) round-trip byte-for-byte through the SendKeys
+    fallback. Carriage returns are folded so ``\\r\\n`` yields a single
+    ``{Enter}``.
+    """
+    out: list[str] = []
+    for ch in text.replace("\r\n", "\n").replace("\r", "\n"):
+        if ch == "\n":
+            out.append("{Enter}")
+        elif ch in _SENDKEYS_META:
+            out.append("{" + ch + "}")
+        else:
+            out.append(ch)
+    return "".join(out)
+
+
 def _do_type(control: Any, text: str) -> None:
     if text is None:
         raise ActionError("type action requires non-empty text")
     value = getattr(control, "GetValuePattern", lambda: None)()
     if value is not None:
         try:
+            # The Value pattern writes the literal string directly — no SendKeys
+            # grammar involved, so the raw text is correct here.
             value.SetValue(text)
             return
         except Exception:
@@ -173,7 +202,23 @@ def _do_type(control: Any, text: str) -> None:
 
     import uiautomation as auto
 
-    auto.SendKeys(text, waitTime=0.0)
+    # The SendKeys fallback runs the text through the SendKeys grammar, so any
+    # metacharacters / newlines must be escaped first or the payload corrupts.
+    auto.SendKeys(escape_sendkeys(text), waitTime=0.0)
+
+
+def click_point(x: int, y: int) -> ActionResult:
+    """Click a raw screen coordinate (vision-fallback path only).
+
+    The UIA-first path never calls this — it is reserved for the OCR fallback,
+    where the only handle on an owner-drawn control is the center of a detected
+    text region. Lazily imports ``uiautomation`` so the core stays importable
+    without a live Windows session.
+    """
+    import uiautomation as auto
+
+    auto.Click(int(x), int(y), waitTime=0.0)
+    return ActionResult(ok=True, detail=f"clicked screen point ({x}, {y})")
 
 
 def _do_select(control: Any) -> None:

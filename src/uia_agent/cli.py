@@ -67,10 +67,18 @@ def run_cmd(
         int,
         typer.Option("--max-steps", help="Hard cap on the observe→act loop."),
     ] = MAX_STEPS_DEFAULT,
+    vision: Annotated[
+        bool,
+        typer.Option(
+            "--vision/--no-vision",
+            help="Fall back to OCR + bbox clicks when the UIA tree has no "
+            "actionable nodes (needs `pip install uia-agent[vision]`).",
+        ),
+    ] = False,
 ) -> None:
     """Drive the focused app toward the instruction, streaming each step."""
     try:
-        for event in run(app_name, instruction, max_steps=max_steps):
+        for event in run(app_name, instruction, max_steps=max_steps, vision=vision):
             _emit(event)
     except AgentBudgetExceeded as exc:
         typer.echo(f"\n[budget] {exc}", err=True)

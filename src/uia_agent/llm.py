@@ -21,10 +21,14 @@ from typing import Any, Protocol
 
 from .actions import Action
 
+# OpenAI's strict structured-output mode requires *every* declared property to
+# appear in `required`; the nullable `["string", "null"]` types below let the
+# optional fields stay logically optional while satisfying that rule. Anthropic
+# tool-use is permissive about this, so a single shared schema works for both.
 ACTION_JSON_SCHEMA: dict[str, Any] = {
     "type": "object",
     "additionalProperties": False,
-    "required": ["kind", "reason"],
+    "required": ["kind", "target_id", "text", "reason"],
     "properties": {
         "kind": {
             "type": "string",

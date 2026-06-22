@@ -17,7 +17,6 @@ from __future__ import annotations
 
 from uia_agent import run
 
-
 INSTRUCTION = (
     "Compute 17 * 23 in the Calculator. When the display shows 391, emit `done`."
 )

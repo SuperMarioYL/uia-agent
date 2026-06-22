@@ -13,7 +13,6 @@ from __future__ import annotations
 
 from uia_agent import run
 
-
 INSTRUCTION = (
     "Type the following haiku into the editor, exactly three lines:\n"
     "    Old Windows still hums\n"

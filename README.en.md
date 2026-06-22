@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="./LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MIT-2E7D32"></a>
-  <a href="https://github.com/supermario-leo/uia-agent/releases"><img alt="release" src="https://img.shields.io/badge/release-v0.1.0-8B5CF6"></a>
+  <a href="https://github.com/supermario-leo/uia-agent/releases"><img alt="release" src="https://img.shields.io/github/v/release/SuperMarioYL/uia-agent?color=8B5CF6"></a>
   <img alt="python" src="https://img.shields.io/badge/python-3.12%2B-3776AB">
   <img alt="platform" src="https://img.shields.io/badge/platform-windows--only-0078D6">
   <a href="https://github.com/supermario-leo/uia-agent/actions"><img alt="ci" src="https://img.shields.io/badge/ci-passing-2E7D32"></a>
@@ -42,7 +42,9 @@ pip install, two CLI commands, ~700 LOC, and the agent goes from `pip` to
 - [What it actually does](#what-it-actually-does)
 - [How it compares](#how-it-compares)
 - [Configuration](#configuration)
+- [Advanced usage](#advanced-usage)
 - [Roadmap](#roadmap)
+- [Benchmark scorecard](./BENCHMARK.md)
 - [Honest caveats](#honest-caveats)
 - [Related work](#related-work)
 - [License + Contributing](#license--contributing)
@@ -153,21 +155,53 @@ uia-agent dump --app Notepad --indent 0
 uia-agent run  --app Calculator --max-steps 15 "compute 17 * 23"
 ```
 
+## <img src="https://api.iconify.design/tabler/terminal-2.svg?color=%238B5CF6" width="20" height="20" align="center" /> Advanced usage
+
+**Vision fallback (v0.2).** Legacy apps often owner-draw their controls, leaving
+the UIA tree with nothing actionable. Pass `--vision`: when a step's pruned UIA
+tree exposes zero actionable nodes, the agent screenshots the window, runs OCR,
+and clicks the highest-confidence text region by coordinate instead of giving
+up. The UIA-first fast path is unchanged — as long as the tree has any
+actionable node, vision is never consulted. Needs the OCR extra:
+
+```bash
+pip install "uia-agent[vision]"        # pytesseract + pillow (Tesseract binary on PATH)
+uia-agent run --app LegacyERP --vision "click Login on the main panel"
+```
+
+**Framework adapter layer (v0.2).** Wrap `dump` / `run` as tools for an existing
+**agent** framework. LangChain ships first; the AutoGen / CrewAI binding shares
+the same framework-neutral `UiaToolSpec`. The core stays dependency-free — the
+adapters are opt-in extras:
+
+```bash
+pip install "uia-agent[langchain]"
+```
+
+```python
+from uia_agent.adapters.langchain_tool import UiaDumpTool, UiaRunTool
+
+tools = [UiaDumpTool(), UiaRunTool()]   # hand to any LangChain agent
+```
+
+See [`examples/`](./examples) for more.
+
 ## Roadmap
 
 - [x] **m1** — `uia-agent dump` prints the pruned UIA tree as JSON for any focused Windows app.
 - [x] **m2** — `uia-agent run` completes the observe → think → act loop with 7 action kinds and structured LLM output.
 - [x] **m3** — Bundled Notepad + Calculator demos, vhs script for the README screencap, benchmark scaffold.
-- [ ] **v0.2 — adapters** — LangChain, AutoGen, CrewAI integrations as separate extras.
-- [ ] **v0.2 — vision fallback** — when UIA returns no useful nodes, fall back to OCR + bbox click instead of giving up.
+- [x] **v0.2 — adapters** — LangChain integration (`uia-agent[langchain]`); AutoGen / CrewAI share the same tool shape.
+- [x] **v0.2 — vision fallback** — OCR + bbox click when UIA returns no useful nodes (`--vision`, `uia-agent[vision]`).
+- [x] **v0.2 — `BENCHMARK.md` as living artifact** — real hit-rate per (app × LLM × version), refreshed each release. See [BENCHMARK.md](./BENCHMARK.md).
 - [ ] **v0.3 — multi-window** — orchestrate across two focused apps (e.g. SAP GUI ↔ Excel).
-- [ ] **v0.3 — `BENCHMARK.md` as living artifact** — hit-rate per (app × LLM × version), refreshed each release.
+- [ ] **v0.3 — MCP server** — expose the action space over MCP so any MCP client can drive desktop apps.
 
 ## Honest caveats
 
 - **Windows-only by design.** macOS Accessibility API and Linux AT-SPI are different shapes — porting is a v1.0 conversation, not a v0.1 promise.
 - **Attended desktop only.** UIA needs a real interactive session; v0.1 does not run headless.
-- **Hit-rate is the only metric that matters.** If UIA on your target app exposes garbage (no names, no Invoke patterns, no Value), this won't save you. We'll publish hit-rate per reference app and stop kidding ourselves at the v0.1 kill criterion.
+- **Hit-rate is the only metric that matters.** If UIA on your target app exposes garbage (no names, no Invoke patterns, no Value), the UIA path won't save you — that's exactly what the `--vision` OCR fallback is for. [BENCHMARK.md](./BENCHMARK.md) publishes real hit-rate per (app × LLM × version) (v0.2.0 averages 83% across the panel); if the average ever drops below 40% we'll kill the project rather than dress it up.
 - **You bring the API key.** No hosted runner, no telemetry, no managed surface. v0.1 is MIT and BYO.
 
 ## Related work
@@ -199,4 +233,4 @@ MIT, BYO API key. https://github.com/supermario-leo/uia-agent
 
 ---
 
-<sub>MIT © 2026 supermario-leo · Built openly by [@supermario-leo](https://github.com/supermario-leo).</sub>
+<p align="center"><sub><a href="./LICENSE">MIT</a> © 2026 SuperMarioYL</sub></p>
