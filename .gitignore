@@ -47,7 +47,7 @@ Thumbs.db
 .claude/
 CLAUDE.md
 
-# ai-radar build orchestration metadata (not source)
+# build orchestration metadata (not source)
 .build_metadata.yaml
 .build_metadata.slices.yaml
 .builder_prompt_*.md
