@@ -193,7 +193,7 @@ See [`examples/`](./examples) for more.
 - [x] **m3** — Bundled Notepad + Calculator demos, vhs script for the README screencap, benchmark scaffold.
 - [x] **v0.2 — adapters** — LangChain integration (`uia-agent[langchain]`); AutoGen / CrewAI share the same tool shape.
 - [x] **v0.2 — vision fallback** — OCR + bbox click when UIA returns no useful nodes (`--vision`, `uia-agent[vision]`).
-- [x] **v0.2 — `BENCHMARK.md` as living artifact** — real hit-rate per (app × LLM × version), refreshed each release. See [BENCHMARK.md](./BENCHMARK.md).
+- [x] **v0.2 — `BENCHMARK.md` as living artifact** — hit-rate harness per (app × LLM × version), refreshed each release (v0.2.0 ships illustrative targets pending the first live Windows run). See [BENCHMARK.md](./BENCHMARK.md).
 - [ ] **v0.3 — multi-window** — orchestrate across two focused apps (e.g. SAP GUI ↔ Excel).
 - [ ] **v0.3 — MCP server** — expose the action space over MCP so any MCP client can drive desktop apps.
 
@@ -201,7 +201,7 @@ See [`examples/`](./examples) for more.
 
 - **Windows-only by design.** macOS Accessibility API and Linux AT-SPI are different shapes — porting is a v1.0 conversation, not a v0.1 promise.
 - **Attended desktop only.** UIA needs a real interactive session; v0.1 does not run headless.
-- **Hit-rate is the only metric that matters.** If UIA on your target app exposes garbage (no names, no Invoke patterns, no Value), the UIA path won't save you — that's exactly what the `--vision` OCR fallback is for. [BENCHMARK.md](./BENCHMARK.md) publishes real hit-rate per (app × LLM × version) (v0.2.0 averages 83% across the panel); if the average ever drops below 40% we'll kill the project rather than dress it up.
+- **Hit-rate is the only metric that matters.** If UIA on your target app exposes garbage (no names, no Invoke patterns, no Value), the UIA path won't save you — that's exactly what the `--vision` OCR fallback is for. [BENCHMARK.md](./BENCHMARK.md) tracks hit-rate per (app × LLM × version) (v0.2.0 ships the harness with an 83% panel target — illustrative until the first live Windows run replaces the targets with measured values); if the measured average ever drops below 40% we'll kill the project rather than dress it up.
 - **You bring the API key.** No hosted runner, no telemetry, no managed surface. v0.1 is MIT and BYO.
 
 ## Related work

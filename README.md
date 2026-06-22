@@ -169,7 +169,7 @@ tools = [UiaDumpTool(), UiaRunTool()]   # 直接喂给任意 LangChain agent
 - [x] **m3** — 自带 Notepad / Calculator demo，README 录屏脚本（vhs），benchmark 脚手架。
 - [x] **v0.2 — 框架适配层** — LangChain 接入（`uia-agent[langchain]`），AutoGen / CrewAI 共用同一套 tool 形状。
 - [x] **v0.2 — 视觉兜底** — UIA 拿不到有效节点时退到 OCR + bbox 点击（`--vision`，`uia-agent[vision]`）。
-- [x] **v0.2 — `BENCHMARK.md` 活的成绩单** — 按 (app × LLM × 版本) 维度公开真实 hit-rate，每次发版刷新。详见 [BENCHMARK.md](./BENCHMARK.md)。
+- [x] **v0.2 — `BENCHMARK.md` 活的成绩单** — 按 (app × LLM × 版本) 维度的 hit-rate 评测脚手架，每次发版刷新（v0.2.0 先给出参考目标值，待首次真机 Windows 跑测后替换为实测值）。详见 [BENCHMARK.md](./BENCHMARK.md)。
 - [ ] **v0.3 — 多窗口** — 跨两个焦点应用编排（比如 SAP GUI ↔ Excel）。
 - [ ] **v0.3 — MCP server** — 把这套 action space 暴露成 MCP，让任意 MCP 客户端直接驱动桌面软件。
 
@@ -177,7 +177,7 @@ tools = [UiaDumpTool(), UiaRunTool()]   # 直接喂给任意 LangChain agent
 
 - **只支持 Windows。** macOS 的 Accessibility API、Linux 的 AT-SPI 是完全不同的形状，v0.1 不承诺移植。
 - **只支持有人值守的桌面。** UIA 需要交互式 session，v0.1 不跑无人值守 / 服务器场景。
-- **唯一值得信任的指标是 hit-rate。** 如果你目标软件的 UIA 树本身就坏（节点没名字、没 Invoke、没 Value），UIA 这条路救不了你——这正是 `--vision` OCR 兜底要补的场景。[BENCHMARK.md](./BENCHMARK.md) 公开了 5 个参考应用按 (app × LLM × 版本) 维度的真实 hit-rate（v0.2.0 均值 83%）；如果哪天均值跌破 40%，我们会自己宣布 kill 项目而不是粉饰。
+- **唯一值得信任的指标是 hit-rate。** 如果你目标软件的 UIA 树本身就坏（节点没名字、没 Invoke、没 Value），UIA 这条路救不了你——这正是 `--vision` OCR 兜底要补的场景。[BENCHMARK.md](./BENCHMARK.md) 给出了 5 个参考应用按 (app × LLM × 版本) 维度的 hit-rate（v0.2.0 先是 83% 的参考目标值，待首次真机 Windows 跑测后替换为实测值）；如果实测均值哪天跌破 40%，我们会自己宣布 kill 项目而不是粉饰。
 - **API key 自带。** 没有云端 runner、没有 telemetry、没有付费层。v0.1 就是 MIT + BYO。
 
 ## 相关项目
