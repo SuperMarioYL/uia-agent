@@ -7,16 +7,16 @@
   "accent": ["#8b5cf6"],
   "hero": {
     "eyebrow": {
-      "zh": "Windows 桌面 · UIA 无障碍树 · 开源 MIT",
-      "en": "Windows desktop · UIA tree · open source MIT"
+      "zh": "Windows 桌面软件 · 开源 MIT · 自带 API key",
+      "en": "Windows desktop apps · open source MIT · bring your own API key"
     },
     "headline": {
-      "zh": "把 Windows UIA 树\n变成 LLM 的行动空间",
-      "en": "The Windows UIA tree,\nas an LLM action space"
+      "zh": "没 API 的老 Windows 软件\n让 LLM 一句话替你点",
+      "en": "Legacy Windows apps with no API,\ndriven by an LLM in one sentence"
     },
     "sub": {
-      "zh": "快照焦点窗口的 UIA 无障碍树并剪枝到 ≤400 节点，交给 LLM 要恰好一个结构化动作，再用真实 UIA 控件模式分发回正在运行的桌面软件。单进程，约 700 行 Python，无服务、无 daemon。",
-      "en": "Snapshots the focused window's UIA tree pruned to ≤400 nodes, asks the LLM for exactly one structured action, then dispatches it back through real UIA control patterns to the running desktop app. One process, ~700 lines of Python, no daemon."
+      "zh": "政企、医疗、制造业还在跑 2008 年的桌面软件——没 API、没 SDK，只能靠人手点鼠标。一句话下达目标，它自己看着界面、点按钮、填表单、存文件，把没人愿意改的老古董软件驱动起来。",
+      "en": "State-owned, hospital, and factory floors still run 2008-era desktop software — no API, no SDK, just humans clicking. State the goal in one sentence; it watches the screen, clicks buttons, fills forms, saves files, and drives the legacy app nobody will replace."
     },
     "command": "uia-agent run --app Notepad \"type a haiku and save as poem.txt\"",
     "cta": { "zh": "开始使用", "en": "Get started" },
@@ -25,58 +25,58 @@
   "advantages": [
     {
       "title": {
-        "zh": "UIA 树就是行动空间",
-        "en": "The UIA tree is the action space"
+        "zh": "不用写 selector，也不用记坐标",
+        "en": "No hand-written selectors, no coordinates"
       },
       "body": {
-        "zh": "把 Windows UIA 无障碍树当成 LLM agent 的一类 action space，和 DOM（browser-use）、像素（VLM）、人写的 selector（UiPath）并列。每步快照并剪枝到 ≤400 节点 / ≤12 层深，丢掉离屏和无名噪声叶子，给每个节点算一个跨快照稳定的 hash id。",
-        "en": "Treats the Windows UIA accessibility tree as a first-class LLM action space — alongside DOM (browser-use), pixels (VLM), or hand-written selectors (UiPath). Each step snapshots and prunes the tree to ≤400 nodes / ≤12 deep, drops off-screen and unnamed noise leaves, and hashes a stable id per node across snapshots."
+        "zh": "老软件没有 API，传统自动化只能靠人写死 selector 或录坐标，界面一改就全废。它像人一样看屏幕——认得每个按钮和输入框，界面变了它也找得到，不用你维护脚本。",
+        "en": "Legacy apps have no API, so traditional automation means hand-writing selectors or recording coordinates that break the moment the UI changes. It reads the screen like a human — recognizing every button and field, so when the UI shifts it still finds them. No script maintenance."
       },
       "chips": [
-        "› 剪枝到 ≤400 节点 / ≤12 层",
-        "› 跨快照稳定 hash id"
+        "› 像人一样认得每个按钮",
+        "› 界面变了不用改脚本"
       ]
     },
     {
       "title": {
-        "zh": "7 种动作走真实 UIA pattern",
-        "en": "7 typed actions on real UIA patterns"
+        "zh": "点的是真按钮，存的是真文件",
+        "en": "Real clicks on real buttons, real saved files"
       },
       "body": {
-        "zh": "click / type / select / expand / key / wait / done 七种有类型的动作，全部走真实 UIA 控件模式：Invoke、Value、SelectionItem、ExpandCollapse。LLM 用结构化输出（Anthropic tool-use 或 OpenAI JSON-schema），所以动作解析不会软失败。",
-        "en": "Seven typed actions — click / type / select / expand / key / wait / done — all dispatched through real UIA control patterns: Invoke, Value, SelectionItem, ExpandCollapse. The LLM uses structured output (Anthropic tool-use or OpenAI JSON-schema), so action parsing can't fail soft."
+        "zh": "每一步都落在正在运行的软件上——点的是真实的按钮，填的是真实的输入框，存的是真实的文件，不是截图模拟。一句话目标进去，它一步步点、填、存，直到把事做完。",
+        "en": "Every step lands on the running app — it clicks the real button, fills the real field, saves the real file, not a screenshot mock. State the goal in one sentence; it clicks, fills, and saves its way to done."
       },
       "chips": [
-        "› Invoke / Value / ExpandCollapse",
-        "› 结构化 LLM 输出"
+        "› 真实点击 / 输入 / 保存",
+        "› 一步步做到 done"
       ]
     },
     {
       "title": {
-        "zh": "MCP server：桌面软件进 MCP",
-        "en": "MCP server: desktop apps over MCP"
+        "zh": "接进你现有的 AI 工作流",
+        "en": "Plug into your existing AI workflow"
       },
       "body": {
-        "zh": "v0.3 新增：把同一套 uia_dump + uia_run 暴露成 MCP，任意 MCP 客户端（Claude Desktop 等）直接驱动 Windows 桌面软件，不用 LangChain 胶水。mcp SDK 懒加载，核心包保持零依赖，是可选 [mcp] extra。",
-        "en": "New in v0.3: exposes the same uia_dump + uia_run over MCP, so any MCP client (Claude Desktop, etc.) drives a Windows app directly — no LangChain glue. The mcp SDK is imported lazily, the core stays dependency-free, and it's an optional [mcp] extra."
+        "zh": "你已经有一套 AI 助手或 agent 框架，不想为桌面软件再搭一套。把桌面软件变成一个可调用的工具，你现有的工作流直接驱动它，不用胶水代码，也不用换技术栈。",
+        "en": "You already have an AI assistant or agent framework — you don't want to rebuild a stack just for desktop apps. Turn the desktop app into a callable tool your existing workflow drives directly, no glue code, no stack swap."
       },
       "chips": [
-        "› uia-agent mcp 起服务",
-        "› [mcp] 可选 extra · 零依赖核心"
+        "› 桌面软件变成可调用工具",
+        "› 不用胶水代码"
       ]
     },
     {
       "title": {
-        "zh": "视觉兜底 · 诚实 hit-rate",
-        "en": "Vision fallback, honest hit-rate"
+        "zh": "读不到按钮就读屏幕，还敢公开成功率",
+        "en": "If it can't read a button, it reads the screen — and it publishes the hit-rate"
       },
       "body": {
-        "zh": "老软件自己画控件、UIA 树里一个可点节点都没有时，加 --vision：截屏 + OCR，按坐标点击置信度最高的文字区域，而不是直接放弃。v0.3 修了重复点同一坐标耗尽步数预算的 spin bug。BENCHMARK.md 按 (app × LLM × 版本) 给 hit-rate，跌破 40% 我们自己宣布 kill。",
-        "en": "When a legacy app paints its own controls and the UIA tree has zero clickable nodes, add --vision: it screenshots, runs OCR, and clicks the highest-confidence text region by coordinate instead of giving up. v0.3 fixes the spin bug that re-clicked one coordinate until the step budget was exhausted. BENCHMARK.md publishes hit-rate by (app × LLM × version); below 40% we kill the project ourselves."
+        "zh": "更老的软件自己画控件，界面上一个可点的东西都没有——别的工具直接放弃。它会退回截屏 + 识图，按文字找到最可能的位置点下去。更难得的是：它公开每个软件的真实成功率，跌破 40% 就自己宣布停项目，不粉饰。",
+        "en": "Older apps paint their own controls, so the screen has nothing clickable — other tools just give up. This one falls back to a screenshot + OCR, finds the most likely spot by text, and clicks it. Rarer still: it publishes the real hit-rate per app, and if it drops below 40% it kills the project itself — no spin."
       },
       "chips": [
-        "› --vision OCR 兜底",
-        "› <40% hit-rate 自宣布 kill"
+        "› 截屏 + 识图兜底",
+        "› 跌破 40% 自宣布停"
       ]
     }
   ],
@@ -86,19 +86,19 @@
   },
   "cta": {
     "headline": {
-      "zh": "browser-use 的桌面补集",
-      "en": "browser-use, for Windows thick clients"
+      "zh": "给那些没人愿意改的桌面软件，一条出路",
+      "en": "A way out for the desktop software no one will fix"
     },
     "sub": {
-      "zh": "开源、MIT、自带 API key，没有云端 runner、没有 telemetry、没有付费墙。",
-      "en": "Open source, MIT, bring your own API key. No cloud runner, no telemetry, no paywall."
+      "zh": "开源、MIT、自带 API key。没有云端、不上报数据、没有付费墙——就在你自己有人值守的 Windows 上跑。",
+      "en": "Open source, MIT, bring your own API key. No cloud, no telemetry, no paywall — runs on your own attended Windows desktop."
     },
     "button": { "zh": "在 GitHub 上开始", "en": "Get started on GitHub" }
   },
   "footer": {
     "tag": {
-      "zh": "用 UIA 无障碍树驱动 Windows 老古董桌面软件的开源 LLM agent",
-      "en": "The open-source LLM agent that drives legacy Windows desktop apps via the UIA tree"
+      "zh": "让 LLM 替你点那些没人愿意改的老 Windows 桌面软件的开源工具",
+      "en": "The open-source tool that lets an LLM drive the legacy Windows desktop apps no one will fix"
     }
   }
 }
