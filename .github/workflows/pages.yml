@@ -13,4 +13,4 @@ concurrency:
   cancel-in-progress: false
 jobs:
   site:
-    uses: SuperMarioYL/web-factory/.github/workflows/build-site.yml@v1
+    uses: SuperMarioYL/web-factory/.github/workflows/build-site.yml@v1.1
