@@ -25,6 +25,10 @@ from .uia_tree import UIANode, snapshot, to_json
 
 MAX_STEPS_DEFAULT = 25
 SETTLE_SECONDS = 0.4
+# Two OCR region centers within this many pixels count as the same click —
+# protects against sub-pixel jitter re-clicking a "fresh" point that is really
+# the same target we already tried.
+_OCR_CLICK_TOLERANCE_PX = 5
 
 
 class StepRecord(BaseModel):
@@ -49,23 +53,56 @@ class AgentBudgetExceeded(RuntimeError):
     """Raised when the step budget runs out before the LLM emits `done`."""
 
 
+def _point_seen(
+    point: tuple[int, int],
+    seen: list[tuple[int, int]],
+    *,
+    tol: int = _OCR_CLICK_TOLERANCE_PX,
+) -> bool:
+    """True when ``point`` is within ``tol`` px of an already-clicked coordinate.
+
+    Used by the vision fallback to keep the OCR path from re-clicking the same
+    screen point every step when a click exposes nothing new in the UIA tree.
+    """
+    px, py = point
+    for sx, sy in seen:
+        if abs(px - sx) <= tol and abs(py - sy) <= tol:
+            return True
+    return False
+
+
 def _vision_fallback_event(
-    app: str, step: int, *, ocr: Any = None, screenshotter: Any = None
+    app: str,
+    step: int,
+    *,
+    ocr: Any = None,
+    screenshotter: Any = None,
+    clicked_points: list[tuple[int, int]] | None = None,
 ) -> StepEvent | None:
     """Build a coordinate-click StepEvent from the OCR fallback, or ``None``.
 
     Called only when ``vision`` is enabled and the pruned UIA tree exposed zero
     actionable nodes. Imports :mod:`uia_agent.vision` lazily so the optional
-    extra never loads on the UIA-first path. Returns ``None`` when OCR finds no
-    clickable text, letting the caller fall through to the normal LLM step.
+    extra never loads on the UIA-first path. Returns ``None`` — letting the
+    caller fall through to the normal LLM step — in two cases: OCR finds no
+    clickable text, OR every OCR region was already clicked this run (so we do
+    not spin on the same coordinate until the step budget is exhausted).
     """
     from .vision import fallback_regions
 
     regions = fallback_regions(app, ocr=ocr, screenshotter=screenshotter)
     if not regions:
         return None
-    region = max(regions, key=lambda r: r.confidence)
+    seen = clicked_points or []
+    fresh = [r for r in regions if not _point_seen(r.center, seen)]
+    if not fresh:
+        # Every candidate was already clicked — fall through to the LLM step
+        # instead of re-clicking the same point.
+        return None
+    region = max(fresh, key=lambda r: r.confidence)
     x, y = region.center
+    if clicked_points is not None:
+        clicked_points.append((x, y))
     action = Action(
         kind="click",
         target_id=None,
@@ -103,6 +140,10 @@ def run(
     """
     client = llm or default_client()
     history: list[StepRecord] = []
+    # OCR coordinate clicks recorded across the whole run so the vision path
+    # can de-dup and avoid re-clicking the same screen point until the budget
+    # is exhausted. Only consulted when ``vision`` is True.
+    clicked_points: list[tuple[int, int]] = []
 
     for step in range(1, max_steps + 1):
         tree = snapshotter(app)
@@ -112,7 +153,11 @@ def run(
 
             if not tree_has_actionable_nodes(tree):
                 event = _vision_fallback_event(
-                    app, step, ocr=ocr, screenshotter=screenshotter
+                    app,
+                    step,
+                    ocr=ocr,
+                    screenshotter=screenshotter,
+                    clicked_points=clicked_points,
                 )
                 if event is not None:
                     history.append(

@@ -97,6 +97,18 @@ def version() -> None:
     typer.echo(f"uia-agent {__version__}")
 
 
+@app.command("mcp")
+def mcp_cmd() -> None:
+    """Start the MCP server (expose dump+run over MCP; needs `pip install uia-agent[mcp]`)."""
+    from .adapters.mcp_server import run_mcp_server
+
+    try:
+        run_mcp_server()
+    except Exception as exc:
+        typer.echo(f"\n[error] {exc}", err=True)
+        raise typer.Exit(code=1) from exc
+
+
 def _emit(event: object) -> None:
     """Format one StepEvent as a single readable line on stdout."""
     # Late import keeps the module importable without uiautomation at install time.

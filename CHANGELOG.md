@@ -4,6 +4,45 @@ All notable changes to **uia-agent** are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] — 2026-07-17
+
+Exposes the uia-agent action space over MCP (the committed `v0.3 — MCP server`
+roadmap item) and hardens two genuine bugs found in the v0.2.0-shipped source.
+The UIA-first happy path and the dependency-free core are unchanged — the MCP
+surface is an opt-in extra, and the two fixes touch only the vision fallback
+and an error message.
+
+### Added
+
+- **m7 — MCP server.** `uia_agent.adapters.mcp_server` exposes the `uia_dump` +
+  `uia_run` tools over MCP stdio, so any MCP client (Claude Desktop, etc.) can
+  drive a Windows app the same way the CLI does. Installable via
+  `pip install uia-agent[mcp]`; started with `uia-agent mcp`. The module mirrors
+  the v0.2.0 LangChain adapter pattern — the `mcp` SDK is imported lazily, the
+  core stays dependency-free, and without the extra `build_server()` raises a
+  clear typed `MCPUnavailable` error. The tool specs reuse the same
+  framework-neutral `UiaToolSpec` as the LangChain / AutoGen / CrewAI bindings,
+  so the run/dump schema is identical across every framework surface.
+
+### Fixed
+
+- **Vision OCR spin.** The `--vision` fallback no longer re-clicks the same
+  OCR coordinate every step until the step budget is exhausted. When a click
+  exposes nothing new in the UIA tree, the next dead step used to re-snapshot,
+  re-OCR, and `max(regions, key=confidence)` returned the same region again —
+  burning the whole budget on one point with no LLM consultation. The loop now
+  records each clicked coordinate, drops already-clicked regions (±5px) from
+  the candidate set before picking, and falls through to the normal LLM step
+  when nothing fresh remains. The UIA-first path and the first-step OCR click
+  are unchanged.
+- **LLM provider install hint.** The `anthropic` / `openai` `ImportError`
+  message no longer points at `pip install uia-agent[dev]` (whose `[dev]` extra
+  only carries pytest/ruff/mypy and does not contain either SDK). It now names
+  `pip install uia-agent` — the command that actually reinstalls these core
+  dependencies — plus the bare-package fallback.
+
+[0.3.0]: https://github.com/supermario-leo/uia-agent/releases/tag/v0.3.0
+
 ## [0.2.0] — 2026-06-22
 
 Roadmap-execution release: three feature milestones land and two source bugs

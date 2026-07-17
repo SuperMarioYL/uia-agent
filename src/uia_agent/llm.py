@@ -55,8 +55,9 @@ class AnthropicClient:
             from anthropic import Anthropic
         except ImportError as exc:
             raise RuntimeError(
-                "anthropic package not installed; `pip install uia-agent[dev]` or "
-                "install anthropic>=0.40"
+                "anthropic package not installed; reinstall with "
+                "`pip install uia-agent` (it is a core dependency) or "
+                "`pip install anthropic>=0.40`"
             ) from exc
         self._client = Anthropic()
         self._model = model or os.getenv("UIA_AGENT_MODEL") or "claude-sonnet-4-6"
@@ -91,8 +92,9 @@ class OpenAIClient:
             from openai import OpenAI
         except ImportError as exc:
             raise RuntimeError(
-                "openai package not installed; `pip install uia-agent[dev]` or "
-                "install openai>=1.50"
+                "openai package not installed; reinstall with "
+                "`pip install uia-agent` (it is a core dependency) or "
+                "`pip install openai>=1.50`"
             ) from exc
         self._client = OpenAI()
         self._model = model or os.getenv("UIA_AGENT_MODEL") or "gpt-4o-2024-11-20"

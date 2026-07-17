@@ -177,3 +177,60 @@ def test_vision_disabled_means_normal_path_even_on_dead_tree() -> None:
 
     assert ocr.calls == 0
     assert events[-1].action.kind == "done"
+
+
+def test_dead_tree_does_not_re_click_same_ocr_region(monkeypatch) -> None:
+    """Regression for the v0.2.0 OCR spin: a dead tree whose only OCR region was
+    already clicked must NOT re-click that point every step until the budget is
+    exhausted. The loop records the click, and on the next dead step every OCR
+    candidate is "seen", so it falls through to the LLM step instead of spinning.
+    """
+    clicked: list[tuple[int, int]] = []
+
+    def _fake_click_point(x: int, y: int) -> actions_mod.ActionResult:
+        clicked.append((x, y))
+        return actions_mod.ActionResult(ok=True, detail=f"clicked ({x}, {y})")
+
+    monkeypatch.setattr(agent, "click_point", _fake_click_point)
+
+    ocr = _StubOCR(
+        [TextRegion(text="Submit", bbox=(200, 300, 400, 360), confidence=0.95)]
+    )
+
+    class _DoneLLM:
+        """Called exactly once — on the step after the OCR click, once the loop
+        has given up re-clicking the same point and falls through to the LLM."""
+
+        def __init__(self) -> None:
+            self.calls = 0
+
+        def next_action(self, *, system: str, user: str):  # pragma: no cover
+            from uia_agent.actions import Action
+
+            self.calls += 1
+            return Action(kind="done", reason="OCR already tried; giving up")
+
+    llm = _DoneLLM()
+
+    events = list(
+        agent.run(
+            "Legacy",
+            "click submit",
+            max_steps=5,
+            llm=llm,
+            snapshotter=lambda _app: _dead_tree(),
+            settle_seconds=0.0,
+            vision=True,
+            ocr=ocr,
+            screenshotter=lambda _app: object(),  # stub image, never inspected
+        )
+    )
+
+    # Exactly one OCR click (not five of the same point), then the LLM is
+    # consulted once and emits done.
+    assert clicked == [(300, 330)], f"expected a single click, got {clicked}"
+    assert llm.calls == 1, f"LLM should be called once after OCR de-dup, got {llm.calls}"
+    assert events[-1].action.kind == "done"
+    # OCR is consulted twice: step 1 picks the region, step 2 sees every
+    # candidate was already clicked and bails out to the LLM path.
+    assert ocr.calls == 2

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "uia-agent"
-version = "0.2.0"
+version = "0.3.0"
 description = "Open-source LLM agent action space for driving legacy Windows thick-client apps via the UIA accessibility tree."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -54,6 +54,12 @@ langchain = [
 vision = [
     "pytesseract>=0.3.10,<0.4",
     "pillow>=10.0,<12.0",
+]
+# MCP server — exposes the `uia_dump` + `uia_run` tools over MCP stdio so any
+# MCP client (Claude Desktop, etc.) can drive a Windows app. The mcp SDK is
+# imported lazily; the core stays dependency-free.
+mcp = [
+    "mcp>=1.0,<2.0",
 ]
 dev = [
     "pytest>=8.0",

@@ -162,6 +162,13 @@ tools = [UiaDumpTool(), UiaRunTool()]   # 直接喂给任意 LangChain agent
 
 更多示例见 [`examples/`](./examples)。
 
+**MCP server（v0.3）。** 把同一套 `dump` / `run` 暴露成 MCP，让任意 MCP 客户端（Claude Desktop 等）直接驱动桌面软件，无需 LangChain 胶水。核心包保持零依赖，`mcp` SDK 懒加载，是可选 extra：
+
+```bash
+pip install "uia-agent[mcp]"
+uia-agent mcp                      # 起一个 MCP stdio server，暴露 uia_dump + uia_run
+```
+
 ## 路线图
 
 - [x] **m1** — `uia-agent dump` 把任意 Windows 焦点窗口的 UIA 树剪枝后打成 JSON。
@@ -170,8 +177,8 @@ tools = [UiaDumpTool(), UiaRunTool()]   # 直接喂给任意 LangChain agent
 - [x] **v0.2 — 框架适配层** — LangChain 接入（`uia-agent[langchain]`），AutoGen / CrewAI 共用同一套 tool 形状。
 - [x] **v0.2 — 视觉兜底** — UIA 拿不到有效节点时退到 OCR + bbox 点击（`--vision`，`uia-agent[vision]`）。
 - [x] **v0.2 — `BENCHMARK.md` 活的成绩单** — 按 (app × LLM × 版本) 维度的 hit-rate 评测脚手架，每次发版刷新（v0.2.0 先给出参考目标值，待首次真机 Windows 跑测后替换为实测值）。详见 [BENCHMARK.md](./BENCHMARK.md)。
-- [ ] **v0.3 — 多窗口** — 跨两个焦点应用编排（比如 SAP GUI ↔ Excel）。
-- [ ] **v0.3 — MCP server** — 把这套 action space 暴露成 MCP，让任意 MCP 客户端直接驱动桌面软件。
+- [ ] **v0.4 — 多窗口** — 跨两个焦点应用编排（比如 SAP GUI ↔ Excel）；需要 stable_id 方案改动，待真机 Windows CI 信号再启动。
+- [x] **v0.3 — MCP server** — 把这套 action space 暴露成 MCP（`uia-agent[mcp]` + `uia-agent mcp`），任意 MCP 客户端直接驱动桌面软件。
 
 ## 诚实的局限
 

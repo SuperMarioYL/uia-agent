@@ -186,6 +186,16 @@ tools = [UiaDumpTool(), UiaRunTool()]   # hand to any LangChain agent
 
 See [`examples/`](./examples) for more.
 
+**MCP server (v0.3).** Expose the same `dump` / `run` action space over MCP so
+any MCP client (Claude Desktop, etc.) can drive a desktop app directly — no
+LangChain glue required. The core stays dependency-free; the `mcp` SDK is
+imported lazily, and MCP is an opt-in extra:
+
+```bash
+pip install "uia-agent[mcp]"
+uia-agent mcp                      # starts an MCP stdio server exposing uia_dump + uia_run
+```
+
 ## Roadmap
 
 - [x] **m1** — `uia-agent dump` prints the pruned UIA tree as JSON for any focused Windows app.
@@ -194,8 +204,8 @@ See [`examples/`](./examples) for more.
 - [x] **v0.2 — adapters** — LangChain integration (`uia-agent[langchain]`); AutoGen / CrewAI share the same tool shape.
 - [x] **v0.2 — vision fallback** — OCR + bbox click when UIA returns no useful nodes (`--vision`, `uia-agent[vision]`).
 - [x] **v0.2 — `BENCHMARK.md` as living artifact** — hit-rate harness per (app × LLM × version), refreshed each release (v0.2.0 ships illustrative targets pending the first live Windows run). See [BENCHMARK.md](./BENCHMARK.md).
-- [ ] **v0.3 — multi-window** — orchestrate across two focused apps (e.g. SAP GUI ↔ Excel).
-- [ ] **v0.3 — MCP server** — expose the action space over MCP so any MCP client can drive desktop apps.
+- [ ] **v0.4 — multi-window** — orchestrate across two focused apps (e.g. SAP GUI ↔ Excel); needs a stable-id scheme change, deferred until a real Windows CI signal.
+- [x] **v0.3 — MCP server** — expose the action space over MCP (`uia-agent[mcp]` + `uia-agent mcp`) so any MCP client can drive desktop apps.
 
 ## Honest caveats
 
