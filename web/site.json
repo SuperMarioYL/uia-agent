@@ -1,0 +1,104 @@
+{
+  "schema": 1,
+  "name": "uia-agent",
+  "github": "https://github.com/SuperMarioYL/uia-agent",
+  "host": "uia-agent.lei6393.com",
+  "lang": { "primary": "zh", "toggle": true },
+  "accent": ["#8b5cf6"],
+  "hero": {
+    "eyebrow": {
+      "zh": "Windows 桌面 · UIA 无障碍树 · 开源 MIT",
+      "en": "Windows desktop · UIA tree · open source MIT"
+    },
+    "headline": {
+      "zh": "把 Windows UIA 树\n变成 LLM 的行动空间",
+      "en": "The Windows UIA tree,\nas an LLM action space"
+    },
+    "sub": {
+      "zh": "快照焦点窗口的 UIA 无障碍树并剪枝到 ≤400 节点，交给 LLM 要恰好一个结构化动作，再用真实 UIA 控件模式分发回正在运行的桌面软件。单进程，约 700 行 Python，无服务、无 daemon。",
+      "en": "Snapshots the focused window's UIA tree pruned to ≤400 nodes, asks the LLM for exactly one structured action, then dispatches it back through real UIA control patterns to the running desktop app. One process, ~700 lines of Python, no daemon."
+    },
+    "command": "uia-agent run --app Notepad \"type a haiku and save as poem.txt\"",
+    "cta": { "zh": "开始使用", "en": "Get started" },
+    "ctaGithub": { "zh": "在 GitHub 查看", "en": "View on GitHub" }
+  },
+  "advantages": [
+    {
+      "title": {
+        "zh": "UIA 树就是行动空间",
+        "en": "The UIA tree is the action space"
+      },
+      "body": {
+        "zh": "把 Windows UIA 无障碍树当成 LLM agent 的一类 action space，和 DOM（browser-use）、像素（VLM）、人写的 selector（UiPath）并列。每步快照并剪枝到 ≤400 节点 / ≤12 层深，丢掉离屏和无名噪声叶子，给每个节点算一个跨快照稳定的 hash id。",
+        "en": "Treats the Windows UIA accessibility tree as a first-class LLM action space — alongside DOM (browser-use), pixels (VLM), or hand-written selectors (UiPath). Each step snapshots and prunes the tree to ≤400 nodes / ≤12 deep, drops off-screen and unnamed noise leaves, and hashes a stable id per node across snapshots."
+      },
+      "chips": [
+        "› 剪枝到 ≤400 节点 / ≤12 层",
+        "› 跨快照稳定 hash id"
+      ]
+    },
+    {
+      "title": {
+        "zh": "7 种动作走真实 UIA pattern",
+        "en": "7 typed actions on real UIA patterns"
+      },
+      "body": {
+        "zh": "click / type / select / expand / key / wait / done 七种有类型的动作，全部走真实 UIA 控件模式：Invoke、Value、SelectionItem、ExpandCollapse。LLM 用结构化输出（Anthropic tool-use 或 OpenAI JSON-schema），所以动作解析不会软失败。",
+        "en": "Seven typed actions — click / type / select / expand / key / wait / done — all dispatched through real UIA control patterns: Invoke, Value, SelectionItem, ExpandCollapse. The LLM uses structured output (Anthropic tool-use or OpenAI JSON-schema), so action parsing can't fail soft."
+      },
+      "chips": [
+        "› Invoke / Value / ExpandCollapse",
+        "› 结构化 LLM 输出"
+      ]
+    },
+    {
+      "title": {
+        "zh": "MCP server：桌面软件进 MCP",
+        "en": "MCP server: desktop apps over MCP"
+      },
+      "body": {
+        "zh": "v0.3 新增：把同一套 uia_dump + uia_run 暴露成 MCP，任意 MCP 客户端（Claude Desktop 等）直接驱动 Windows 桌面软件，不用 LangChain 胶水。mcp SDK 懒加载，核心包保持零依赖，是可选 [mcp] extra。",
+        "en": "New in v0.3: exposes the same uia_dump + uia_run over MCP, so any MCP client (Claude Desktop, etc.) drives a Windows app directly — no LangChain glue. The mcp SDK is imported lazily, the core stays dependency-free, and it's an optional [mcp] extra."
+      },
+      "chips": [
+        "› uia-agent mcp 起服务",
+        "› [mcp] 可选 extra · 零依赖核心"
+      ]
+    },
+    {
+      "title": {
+        "zh": "视觉兜底 · 诚实 hit-rate",
+        "en": "Vision fallback, honest hit-rate"
+      },
+      "body": {
+        "zh": "老软件自己画控件、UIA 树里一个可点节点都没有时，加 --vision：截屏 + OCR，按坐标点击置信度最高的文字区域，而不是直接放弃。v0.3 修了重复点同一坐标耗尽步数预算的 spin bug。BENCHMARK.md 按 (app × LLM × 版本) 给 hit-rate，跌破 40% 我们自己宣布 kill。",
+        "en": "When a legacy app paints its own controls and the UIA tree has zero clickable nodes, add --vision: it screenshots, runs OCR, and clicks the highest-confidence text region by coordinate instead of giving up. v0.3 fixes the spin bug that re-clicked one coordinate until the step budget was exhausted. BENCHMARK.md publishes hit-rate by (app × LLM × version); below 40% we kill the project ourselves."
+      },
+      "chips": [
+        "› --vision OCR 兜底",
+        "› <40% hit-rate 自宣布 kill"
+      ]
+    }
+  ],
+  "scene": {
+    "kind": "hub-nodes",
+    "nodes": ["Notepad", "Calculator", "Settings", "WinForms ERP", "SAP GUI"]
+  },
+  "cta": {
+    "headline": {
+      "zh": "browser-use 的桌面补集",
+      "en": "browser-use, for Windows thick clients"
+    },
+    "sub": {
+      "zh": "开源、MIT、自带 API key，没有云端 runner、没有 telemetry、没有付费墙。",
+      "en": "Open source, MIT, bring your own API key. No cloud runner, no telemetry, no paywall."
+    },
+    "button": { "zh": "在 GitHub 上开始", "en": "Get started on GitHub" }
+  },
+  "footer": {
+    "tag": {
+      "zh": "用 UIA 无障碍树驱动 Windows 老古董桌面软件的开源 LLM agent",
+      "en": "The open-source LLM agent that drives legacy Windows desktop apps via the UIA tree"
+    }
+  }
+}
