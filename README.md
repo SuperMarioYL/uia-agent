@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <a href="./LICENSE"><img alt="许可证" src="https://img.shields.io/badge/license-MIT-2E7D32"></a>
+  <a href="./LICENSE"><img alt="许可证" src="https://img.shields.io/badge/license-Apache--2.0-2E7D32"></a>
   <a href="https://github.com/supermario-leo/uia-agent/releases"><img alt="版本" src="https://img.shields.io/github/v/release/SuperMarioYL/uia-agent?color=8B5CF6"></a>
   <img alt="Python" src="https://img.shields.io/badge/python-3.12%2B-3776AB">
   <img alt="平台" src="https://img.shields.io/badge/platform-windows--only-0078D6">
