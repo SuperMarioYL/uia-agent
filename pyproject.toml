@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "uia-agent"
-version = "0.3.0"
+version = "0.4.0"
 description = "Open-source LLM agent action space for driving legacy Windows thick-client apps via the UIA accessibility tree."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -27,7 +27,7 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Console",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: Apache Software License",
+    "License :: OSI Approved :: MIT License",
     "Operating System :: Microsoft :: Windows",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.12",
@@ -72,9 +72,9 @@ dev = [
 uia-agent = "uia_agent.cli:app"
 
 [project.urls]
-Homepage = "https://github.com/supermario-leo/uia-agent"
-Repository = "https://github.com/supermario-leo/uia-agent"
-Issues = "https://github.com/supermario-leo/uia-agent/issues"
+Homepage = "https://github.com/SuperMarioYL/uia-agent"
+Repository = "https://github.com/SuperMarioYL/uia-agent"
+Issues = "https://github.com/SuperMarioYL/uia-agent/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/uia_agent"]
