@@ -1,5 +1,6 @@
 {
   "schema": 1,
+  "content_version": "v0.4.0",
   "name": "uia-agent",
   "github": "https://github.com/SuperMarioYL/uia-agent",
   "host": "uia-agent.lei6393.com",
@@ -62,20 +63,22 @@
       },
       "chips": [
         "› 桌面软件变成可调用工具",
-        "› 不用胶水代码"
+        "› 不用胶水代码",
+        "› 包页面直连真仓库 + issue"
       ]
     },
     {
       "title": {
-        "zh": "读不到按钮就读屏幕，还敢公开成功率",
-        "en": "If it can't read a button, it reads the screen — and it publishes the hit-rate"
+        "zh": "读不到按钮就读屏幕，兜底也不崩",
+        "en": "If it can't read a button, it reads the screen — and the fallback won't crash"
       },
       "body": {
-        "zh": "更老的软件自己画控件，界面上一个可点的东西都没有——别的工具直接放弃。它会退回截屏 + 识图，按文字找到最可能的位置点下去。更难得的是：它公开每个软件的真实成功率，跌破 40% 就自己宣布停项目，不粉饰。",
-        "en": "Older apps paint their own controls, so the screen has nothing clickable — other tools just give up. This one falls back to a screenshot + OCR, finds the most likely spot by text, and clicks it. Rarer still: it publishes the real hit-rate per app, and if it drops below 40% it kills the project itself — no spin."
+        "zh": "更老的软件自己画控件，界面上一个可点的东西都没有——别的工具直接放弃。它会退回截屏 + 识图，按文字找到最可能的位置点下去。哪怕识图本身起不来，它也会退回让模型自己看这一步，而不是把整个任务跑崩。更难得的是：它公开每个软件的真实成功率，跌破 40% 就自己宣布停项目，不粉饰。",
+        "en": "Older apps paint their own controls, so the screen has nothing clickable — other tools just give up. This one falls back to a screenshot + OCR, finds the most likely spot by text, and clicks it. Even when OCR itself can't run, it hands the step back to the model instead of crashing the whole run. Rarer still: it publishes the real hit-rate per app, and if it drops below 40% it kills the project itself — no spin."
       },
       "chips": [
         "› 截屏 + 识图兜底",
+        "› 识图起不来也不崩",
         "› 跌破 40% 自宣布停"
       ]
     }
