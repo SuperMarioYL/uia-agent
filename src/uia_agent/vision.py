@@ -18,12 +18,15 @@ injectable so the decision logic can be unit-tested with no native deps.
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 from typing import Any, Protocol
 
 from pydantic import BaseModel, Field
 
 from .uia_tree import UIANode
+
+_log = logging.getLogger("uia_agent.vision")
 
 # An actionable node is one the agent can dispatch a click/type/select against:
 # it must be enabled and expose at least one of these interaction patterns.
@@ -102,7 +105,25 @@ class TesseractEngine:
                 "ensure the Tesseract binary is on PATH"
             ) from exc
 
-        data = pytesseract.image_to_data(image, output_type=Output.DICT)
+        # The [vision] extra installs the pytesseract *binding* but NOT the
+        # native Tesseract binary (see pyproject.toml). When that binary is
+        # absent, image_to_data raises pytesseract.pytesseract.TesseractNotFoundError
+        # (an EnvironmentError) — or any other OCR runtime error on a bad image.
+        # Guard the call so the vision path degrades to the normal LLM step
+        # (caller's fallback_regions -> _vision_fallback_event returns None ->
+        # run() falls through to the LLM) instead of crashing the whole run via
+        # the CLI's generic except. Logged — never silent — so genuine OCR bugs
+        # surface in the run log rather than being swallowed as "no regions".
+        try:
+            data = pytesseract.image_to_data(image, output_type=Output.DICT)
+        except Exception as exc:  # noqa: BLE001 - binary missing / OCR runtime failure
+            _log.warning(
+                "vision OCR unavailable (image_to_data failed: %s); "
+                "degrading to the LLM step",
+                exc,
+            )
+            return []
+
         out: list[TextRegion] = []
         for i, raw in enumerate(data.get("text", [])):
             text = (raw or "").strip()
