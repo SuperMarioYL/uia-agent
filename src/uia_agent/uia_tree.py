@@ -80,8 +80,15 @@ def _is_offscreen(bbox: tuple[int, int, int, int]) -> bool:
     left, top, right, bottom = bbox
     if right <= left or bottom <= top:
         return True
-    # Heuristic: a node positioned far outside any plausible screen is offscreen.
-    return right < 0 or bottom < 0 or left > 32_000 or top > 32_000
+    # A node is offscreen only when it lies ENTIRELY outside the virtual
+    # screen. Windows places monitors left-of/above the primary display at
+    # negative virtual-screen coordinates, so a negative right/bottom edge is
+    # valid and must NOT be pruned — pruning the root window crashes
+    # snapshot_from with SnapshotError("root control was pruned away") on a
+    # common multi-monitor layout. The symmetric +/-32_000 bound mirrors the
+    # upper limit, catching genuinely degenerate boxes while keeping real
+    # left-of/above-primary windows intact.
+    return right < -32_000 or bottom < -32_000 or left > 32_000 or top > 32_000
 
 
 def _patterns_for(control: Any) -> list[str]:

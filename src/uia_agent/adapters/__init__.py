@@ -91,14 +91,21 @@ def _run_impl(app: str, instruction: str, max_steps: int = 25) -> str:
     Windows session — :mod:`uia_agent.agent` only needs uiautomation at call
     time, not import time.
     """
-    from ..agent import run
+    from ..agent import AgentBudgetExceeded, run
 
     lines: list[str] = []
-    for event in run(app, instruction, max_steps=max_steps):
-        action = event.action
-        status = event.error or (event.result.detail if event.result else "")
-        mark = "ERR" if event.error else "OK"
-        lines.append(f"step {event.index:02d} {action.kind:<6} [{mark}] {status}")
+    try:
+        for event in run(app, instruction, max_steps=max_steps):
+            action = event.action
+            status = event.error or (event.result.detail if event.result else "")
+            mark = "ERR" if event.error else "OK"
+            lines.append(f"step {event.index:02d} {action.kind:<6} [{mark}] {status}")
+    except AgentBudgetExceeded as exc:
+        # Mirror the CLI's exit-3-with-partial-trace behavior: the framework
+        # tool returns the buffered partial trace plus a [budget] marker so a
+        # >max_steps task surfaces its output, not an opaque tool error with
+        # zero output (the v0.4.0 path discarded the `lines` buffer entirely).
+        lines.append(f"[budget] {exc}")
     return "\n".join(lines) if lines else "(no steps executed)"
 
 

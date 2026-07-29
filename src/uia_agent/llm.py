@@ -115,8 +115,23 @@ class OpenAIClient:
                 },
             },
         )
-        payload = response.choices[0].message.content or "{}"
-        return Action.model_validate(json.loads(payload))
+        choice = response.choices[0]
+        message = choice.message
+        finish_reason = getattr(choice, "finish_reason", None)
+        content = getattr(message, "content", None)
+        # Guard before parsing, mirroring the Anthropic path (llm.py:81-84): under
+        # strict json_schema mode OpenAI returns `message.content = null` with
+        # `finish_reason = "content_filter"` when a call is filtered; the v0.4.0
+        # `content or "{}"` fallback turned that into `{}`, which failed pydantic
+        # validation (required `kind` missing) and propagated as an opaque
+        # ValidationError through `run` to the CLI's generic [error] exit. Raise
+        # a clear, actionable error instead.
+        if not content or finish_reason != "stop":
+            raise RuntimeError(
+                "OpenAI returned no structured output "
+                f"(refusal/content_filter? finish_reason={finish_reason!r})"
+            )
+        return Action.model_validate(json.loads(content))
 
 
 def default_client() -> LLMClient:

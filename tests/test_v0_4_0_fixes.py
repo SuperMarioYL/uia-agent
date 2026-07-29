@@ -24,8 +24,6 @@ import tomllib
 import types
 from pathlib import Path
 
-import pytest
-
 # Use the real exception class the bug is about when the binding is installed;
 # fall back to a faithful stand-in (same base class) when it is not.
 try:  # pragma: no cover - depends on whether the [vision] extra is installed
@@ -44,10 +42,11 @@ DEAD_OWNER = "supermario-leo"
 # --- Fix 1: pyproject URLs + version point at the live repo -----------------
 
 
-def test_pyproject_version_is_v0_4_0() -> None:
+def test_pyproject_version_is_current() -> None:
     with _PYPROJECT.open("rb") as fh:
         data = tomllib.load(fh)
-    assert data["project"]["version"] == "0.4.0"
+    # v0.4.0 bumped the stale 0.3.0 metadata; the v0.5.0 release bumps to 0.5.0.
+    assert data["project"]["version"] == "0.5.0"
 
 
 def test_pyproject_urls_resolve_to_live_repo() -> None:

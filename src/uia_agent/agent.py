@@ -65,10 +65,7 @@ def _point_seen(
     screen point every step when a click exposes nothing new in the UIA tree.
     """
     px, py = point
-    for sx, sy in seen:
-        if abs(px - sx) <= tol and abs(py - sy) <= tol:
-            return True
-    return False
+    return any(abs(px - sx) <= tol and abs(py - sy) <= tol for sx, sy in seen)
 
 
 def _vision_fallback_event(

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "uia-agent"
-version = "0.4.0"
+version = "0.5.0"
 description = "Open-source LLM agent action space for driving legacy Windows thick-client apps via the UIA accessibility tree."
 readme = "README.md"
 license = { file = "LICENSE" }

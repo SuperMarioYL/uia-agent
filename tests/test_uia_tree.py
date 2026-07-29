@@ -132,7 +132,10 @@ def test_offscreen_nodes_are_dropped() -> None:
         name="App",
         children=[
             _btn("Visible", bbox=(0, 0, 100, 40)),
-            _btn("Offscreen", bbox=(-500, -500, -400, -400)),
+            # A box lying ENTIRELY beyond the virtual-screen bound (not merely
+            # at a negative coord, which is valid on left-of/above-primary
+            # monitors). The symmetric -32_000 lower bound catches this.
+            _btn("Offscreen", bbox=(-32_500, -32_500, -32_400, -32_400)),
             _btn("ZeroArea", bbox=(50, 50, 50, 50)),
         ],
     )

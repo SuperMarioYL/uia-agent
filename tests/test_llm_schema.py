@@ -55,6 +55,7 @@ def test_openai_client_sends_strict_schema_without_400() -> None:
 
     class _Choice:
         message = _Message()
+        finish_reason = "stop"  # a real strict-mode success carries finish_reason="stop"
 
     class _Response:
         choices = [_Choice()]
