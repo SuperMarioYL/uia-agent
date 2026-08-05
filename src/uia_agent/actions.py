@@ -135,16 +135,22 @@ def _do_click(control: Any) -> None:
         try:
             invoke.Invoke()
             return
-        except Exception:
-            pass
+        except Exception as exc:
+            # Surface a genuine invoke failure (control disabled / vanished
+            # between snapshot and dispatch) as a per-step ActionError instead
+            # of swallowing it and falling through to a coordinate Click that
+            # raises nothing on a dead control — which `dispatch` would then
+            # record as a silent ok=True. The coordinate Click fallback below
+            # is preserved only for controls that expose NO pattern.
+            raise ActionError(f"Invoke failed on {control!r}: {exc}") from exc
 
     select_item = getattr(control, "GetSelectionItemPattern", lambda: None)()
     if select_item is not None:
         try:
             select_item.Select()
             return
-        except Exception:
-            pass
+        except Exception as exc:
+            raise ActionError(f"Select failed on {control!r}: {exc}") from exc
 
     click = getattr(control, "Click", None)
     if click is None:
@@ -183,7 +189,11 @@ def escape_sendkeys(text: str) -> str:
 
 
 def _do_type(control: Any, text: str) -> None:
-    if text is None:
+    # `dispatch` passes `action.text or ""`, so a None/empty payload arrives as
+    # "" here — guard with `not text` (mirrors `_do_key`) instead of the dead
+    # `is None` check, or an empty `type` no-ops through SendKeys("") and the
+    # caller reports a silent SUCCESS having typed nothing.
+    if not text:
         raise ActionError("type action requires non-empty text")
     value = getattr(control, "GetValuePattern", lambda: None)()
     if value is not None:

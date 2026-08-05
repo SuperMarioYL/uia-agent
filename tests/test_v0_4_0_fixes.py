@@ -45,8 +45,9 @@ DEAD_OWNER = "supermario-leo"
 def test_pyproject_version_is_current() -> None:
     with _PYPROJECT.open("rb") as fh:
         data = tomllib.load(fh)
-    # v0.4.0 bumped the stale 0.3.0 metadata; the v0.5.0 release bumps to 0.5.0.
-    assert data["project"]["version"] == "0.5.0"
+    # v0.4.0 bumped the stale 0.3.0 metadata; each subsequent release keeps it
+    # current — v0.6.0 ships two silent-success action fixes.
+    assert data["project"]["version"] == "0.6.0"
 
 
 def test_pyproject_urls_resolve_to_live_repo() -> None:

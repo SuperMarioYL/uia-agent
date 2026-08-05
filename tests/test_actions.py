@@ -14,6 +14,8 @@ from uia_agent.actions import (
     Action,
     ActionError,
     ActionResult,
+    _do_click,
+    _do_type,
     dispatch,
     escape_sendkeys,
     index_tree,
@@ -141,6 +143,82 @@ def test_escape_sendkeys_round_trips_a_multiline_special_char_payload() -> None:
     payload = "f(x)+y^2 {note}\n100% done~"
     expected = "f{(}x{)}{+}y{^}2 {{}note{}}{Enter}100{%} done{~}"
     assert escape_sendkeys(payload) == expected
+
+
+class _FakeControl:
+    """Minimal stand-in for a ``uiautomation`` control — only the attributes the
+    dispatch helpers touch (``Get*Pattern`` / ``Click``). Lets the click/type
+    regression tests run cross-platform without a live Windows desktop session."""
+
+    def __init__(self, *, invoke=None, select=None, click=None):
+        self._invoke = invoke
+        self._select = select
+        self._click = click
+
+    def GetInvokePattern(self):
+        return self._invoke
+
+    def GetSelectionItemPattern(self):
+        return self._select
+
+    def Click(self, simulateMove=False, **kwargs):  # noqa: ANN001, ANN002
+        if self._click is not None:
+            self._click()
+
+    def __repr__(self):
+        return "<_FakeControl>"
+
+
+class _RaisingInvoke:
+    """An Invoke pattern whose Invoke() raises — models a control that became
+    disabled / vanished between snapshot and dispatch."""
+
+    def Invoke(self) -> None:
+        raise RuntimeError("ElementNotEnabled")
+
+
+class _RaisingSelect:
+    def Select(self) -> None:
+        raise RuntimeError("ElementNotEnabled")
+
+
+def test_type_action_requires_non_empty_text() -> None:
+    # Regression: an empty/None `type` payload used to no-op through
+    # SendKeys("") while dispatch reported ok=True (silent data loss). The
+    # guard now mirrors `_do_key`'s `if not text` so it surfaces as a per-step
+    # ActionError the LLM can correct next turn.
+    fake = _FakeControl()
+    with pytest.raises(ActionError, match="non-empty text"):
+        _do_type(fake, "")
+    with pytest.raises(ActionError, match="non-empty text"):
+        _do_type(fake, None)
+
+
+def test_click_raises_on_invoke_failure_instead_of_swallowing() -> None:
+    # Regression: _do_click used to `except Exception: pass` around Invoke(),
+    # then fall through to a coordinate Click that raises nothing on a disabled
+    # control, so dispatch reported a silent ok=True for a click that had no
+    # effect. A genuine invoke failure must now surface as an ActionError
+    # (agent.run maps that to ActionResult(ok=False) + event.error).
+    control = _FakeControl(invoke=_RaisingInvoke())
+    with pytest.raises(ActionError, match="Invoke failed"):
+        _do_click(control)
+
+
+def test_click_raises_on_select_failure_instead_of_swallowing() -> None:
+    control = _FakeControl(select=_RaisingSelect())
+    with pytest.raises(ActionError, match="Select failed"):
+        _do_click(control)
+
+
+def test_click_coordinate_fallback_preserved_for_patternless_control() -> None:
+    # The coordinate Click fallback must stay for controls that expose NO
+    # pattern — only the swallowed *failures* were converted to errors, not the
+    # legitimate no-pattern path.
+    clicked: list[int] = []
+    control = _FakeControl(click=lambda: clicked.append(1))
+    _do_click(control)  # should not raise
+    assert clicked == [1]
 
 
 @pytest.mark.windows_only
