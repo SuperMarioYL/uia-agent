@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "content_version": "v0.4.0",
+  "content_version": "v0.6.0",
   "name": "uia-agent",
   "github": "https://github.com/SuperMarioYL/uia-agent",
   "host": "uia-agent.lei6393.com",
@@ -8,8 +8,8 @@
   "accent": ["#8b5cf6"],
   "hero": {
     "eyebrow": {
-      "zh": "Windows 桌面软件 · 开源 MIT · 自带 API key",
-      "en": "Windows desktop apps · open source MIT · bring your own API key"
+      "zh": "Windows 桌面软件 · 开源 Apache 2.0 · 自带 API key",
+      "en": "Windows desktop apps · open source Apache 2.0 · bring your own API key"
     },
     "headline": {
       "zh": "没 API 的老 Windows 软件\n让 LLM 一句话替你点",
@@ -44,12 +44,12 @@
         "en": "Real clicks on real buttons, real saved files"
       },
       "body": {
-        "zh": "每一步都落在正在运行的软件上——点的是真实的按钮，填的是真实的输入框，存的是真实的文件，不是截图模拟。一句话目标进去，它一步步点、填、存，直到把事做完。",
-        "en": "Every step lands on the running app — it clicks the real button, fills the real field, saves the real file, not a screenshot mock. State the goal in one sentence; it clicks, fills, and saves its way to done."
+        "zh": "每一步都落在正在运行的软件上——点的是真实的按钮，填的是真实的输入框，存的是真实的文件，不是截图模拟。一句话目标进去，它一步步点、填、存，直到把事做完；没做成的那一步，它不会报成成功。",
+        "en": "Every step lands on the running app — it clicks the real button, fills the real field, saves the real file, not a screenshot mock. State the goal in one sentence; it clicks, fills, and saves its way to done — and a step that didn't actually happen is never reported as a success."
       },
       "chips": [
         "› 真实点击 / 输入 / 保存",
-        "› 一步步做到 done"
+        "› 没做成的不报成"
       ]
     },
     {
@@ -58,13 +58,13 @@
         "en": "Plug into your existing AI workflow"
       },
       "body": {
-        "zh": "你已经有一套 AI 助手或 agent 框架，不想为桌面软件再搭一套。把桌面软件变成一个可调用的工具，你现有的工作流直接驱动它，不用胶水代码，也不用换技术栈。",
-        "en": "You already have an AI assistant or agent framework — you don't want to rebuild a stack just for desktop apps. Turn the desktop app into a callable tool your existing workflow drives directly, no glue code, no stack swap."
+        "zh": "你已经有一套 AI 助手或 agent 框架，不想为桌面软件再搭一套。把桌面软件变成一个可调用的工具，你现有的工作流直接驱动它，不用胶水代码，也不用换技术栈；步数用完时它带回已经做完的部分，而不是把整段跑过的过程丢成一句报错。",
+        "en": "You already have an AI assistant or agent framework — you don't want to rebuild a stack just for desktop apps. Turn the desktop app into a callable tool your existing workflow drives directly, no glue code, no stack swap; and when the step budget runs out it brings back the part it already finished instead of throwing the whole run away as an opaque error."
       },
       "chips": [
         "› 桌面软件变成可调用工具",
         "› 不用胶水代码",
-        "› 包页面直连真仓库 + issue"
+        "› 步数用完也带回已做的"
       ]
     },
     {
@@ -73,12 +73,12 @@
         "en": "If it can't read a button, it reads the screen — and the fallback won't crash"
       },
       "body": {
-        "zh": "更老的软件自己画控件，界面上一个可点的东西都没有——别的工具直接放弃。它会退回截屏 + 识图，按文字找到最可能的位置点下去。哪怕识图本身起不来，它也会退回让模型自己看这一步，而不是把整个任务跑崩。更难得的是：它公开每个软件的真实成功率，跌破 40% 就自己宣布停项目，不粉饰。",
-        "en": "Older apps paint their own controls, so the screen has nothing clickable — other tools just give up. This one falls back to a screenshot + OCR, finds the most likely spot by text, and clicks it. Even when OCR itself can't run, it hands the step back to the model instead of crashing the whole run. Rarer still: it publishes the real hit-rate per app, and if it drops below 40% it kills the project itself — no spin."
+        "zh": "更老的软件自己画控件，界面上一个可点的东西都没有——别的工具直接放弃。它会退回截屏 + 识图，按文字找到最可能的位置点下去。哪怕识图本身起不来，或者目标窗口落在主屏之外，它也不会把整个任务跑崩，而是退回让模型自己看这一步。更难得的是：它公开每个软件的真实成功率，跌破 40% 就自己宣布停项目，不粉饰。",
+        "en": "Older apps paint their own controls, so the screen has nothing clickable — other tools just give up. This one falls back to a screenshot + OCR, finds the most likely spot by text, and clicks it. Even when OCR itself can't run, or the target window sits off the primary screen, it never crashes the whole run — it hands the step back to the model instead. Rarer still: it publishes the real hit-rate per app, and if it drops below 40% it kills the project itself — no spin."
       },
       "chips": [
         "› 截屏 + 识图兜底",
-        "› 识图起不来也不崩",
+        "› 边界窗口 / 识图失灵都不崩",
         "› 跌破 40% 自宣布停"
       ]
     }
@@ -93,8 +93,8 @@
       "en": "A way out for the desktop software no one will fix"
     },
     "sub": {
-      "zh": "开源、MIT、自带 API key。没有云端、不上报数据、没有付费墙——就在你自己有人值守的 Windows 上跑。",
-      "en": "Open source, MIT, bring your own API key. No cloud, no telemetry, no paywall — runs on your own attended Windows desktop."
+      "zh": "开源、Apache 2.0、自带 API key。没有云端、不上报数据、没有付费墙——就在你自己有人值守的 Windows 上跑。",
+      "en": "Open source, Apache 2.0, bring your own API key. No cloud, no telemetry, no paywall — runs on your own attended Windows desktop."
     },
     "button": { "zh": "在 GitHub 上开始", "en": "Get started on GitHub" }
   },
