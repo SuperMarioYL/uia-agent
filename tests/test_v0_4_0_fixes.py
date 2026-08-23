@@ -46,8 +46,8 @@ def test_pyproject_version_is_current() -> None:
     with _PYPROJECT.open("rb") as fh:
         data = tomllib.load(fh)
     # v0.4.0 bumped the stale 0.3.0 metadata; each subsequent release keeps it
-    # current — v0.6.0 ships two silent-success action fixes.
-    assert data["project"]["version"] == "0.6.0"
+    # current — v0.7.0 ships four run-abort / silent-misclick fixes.
+    assert data["project"]["version"] == "0.7.0"
 
 
 def test_pyproject_urls_resolve_to_live_repo() -> None:

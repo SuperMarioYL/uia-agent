@@ -1,6 +1,7 @@
 {
   "schema": 1,
-  "content_version": "v0.6.0",
+  "content_version": "v0.7.0",
+  "generated_at": "2026-08-23",
   "name": "uia-agent",
   "github": "https://github.com/SuperMarioYL/uia-agent",
   "host": "uia-agent.lei6393.com",

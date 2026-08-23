@@ -235,7 +235,14 @@ def _do_select(control: Any) -> None:
     pattern = getattr(control, "GetSelectionItemPattern", lambda: None)()
     if pattern is None:
         raise ActionError("control does not expose SelectionItem")
-    pattern.Select()
+    # Surface a genuine Select failure (control disabled / vanished between
+    # snapshot and dispatch) as a per-step ActionError — mirroring _do_click's
+    # SelectionItem handling — instead of letting the raw exception abort the
+    # whole run (agent.run only catches ActionError).
+    try:
+        pattern.Select()
+    except Exception as exc:
+        raise ActionError(f"Select failed on {control!r}: {exc}") from exc
 
 
 def _do_expand(control: Any) -> None:
@@ -246,7 +253,12 @@ def _do_expand(control: Any) -> None:
     # 0 = Collapsed, 1 = Expanded — toggle toward expanded.
     if state == 1:
         return
-    pattern.Expand()
+    # Same ActionError contract as _do_select / _do_click: a pattern failure
+    # must become a recoverable per-step error, not a run-aborting exception.
+    try:
+        pattern.Expand()
+    except Exception as exc:
+        raise ActionError(f"Expand failed on {control!r}: {exc}") from exc
 
 
 def _do_key(text: str) -> None:

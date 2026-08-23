@@ -106,6 +106,15 @@ def _run_impl(app: str, instruction: str, max_steps: int = 25) -> str:
         # >max_steps task surfaces its output, not an opaque tool error with
         # zero output (the v0.4.0 path discarded the `lines` buffer entirely).
         lines.append(f"[budget] {exc}")
+    except Exception as exc:  # noqa: BLE001 - any run-aborting error must surface the partial trace
+        # Complete the v0.5.0 budget-path contract to ALL run-aborting errors
+        # (SnapshotError when the window vanishes mid-run, the LLM refusal
+        # RuntimeError, etc.). The CLI streams each step live before its
+        # generic [error] exit and loses nothing; the framework tool used to
+        # discard the buffered partial trace on these other aborts. Mirror the
+        # CLI: append a trailing [error] line and return the joined partial
+        # trace, not an opaque empty error.
+        lines.append(f"[error] {exc}")
     return "\n".join(lines) if lines else "(no steps executed)"
 
 

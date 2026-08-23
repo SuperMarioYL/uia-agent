@@ -4,6 +4,58 @@ All notable changes to **uia-agent** are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] — 2026-08-23
+
+Four `type:fix` milestones hardening the shipped v0.6.0 source — all grounded
+at file:line and verified by revert-able regression tests. The UIA-first happy
+path and the dependency-free core are unchanged; every fix is a targeted guard
+or offset correction on an existing dispatch / vision / adapter path.
+
+### Fixed
+
+- **fix-select-expand-unguarded-pattern.** `_do_select` (`actions.py:238`)
+  called `pattern.Select()` unguarded and `_do_expand` (`actions.py:249`)
+  called `pattern.Expand()` unguarded. A genuine pattern failure (control
+  disabled / vanished between snapshot and dispatch) raised a raw exception
+  that propagated past `agent.run`'s `ActionError`-only catch
+  (`agent.py:188`) and aborted the whole multi-step run (CLI exit 1 / framework
+  opaque error) — asymmetric with `_do_click`'s Invoke / SelectionItem
+  handling (`actions.py:135-153`). Both calls are now wrapped in `try/except`
+  raising a recoverable `ActionError(f"... failed on {control!r}: {exc}") from
+  exc`, so a failed select / expand becomes a per-step `ActionResult(ok=False)`
+  the LLM can correct next turn instead of aborting the run.
+- **fix-vision-screenshot-crash.** `fallback_regions` (`vision.py:185`)
+  called `shoot(app)` unguarded. `_default_screenshotter` raises
+  `VisionUnavailable` when the `uiautomation` build exposes no screenshot
+  helper or there is no live Windows session, and that exception propagated
+  uncaught through `_vision_fallback_event` and `run`, aborting the whole run
+  — contradicting the v0.4.0 contract that a vision-step failure must degrade
+  to the LLM step. The call is now wrapped (logged, never silent) so a
+  screenshot failure returns `[]` and the run falls through to the LLM step,
+  symmetric with the `TesseractEngine.regions` guard.
+- **fix-vision-ocr-coordinate-offset.** `_default_screenshotter` captured only
+  the window's `BoundingRectangle`, so `pytesseract` returned window-relative
+  coordinates, but `click_point` passed the center straight to `auto.Click`
+  (`actions.py:230`) which expects screen-absolute coordinates. No window
+  screen offset was added anywhere, so for any window not at screen origin
+  `(0,0)` the vision fallback silently clicked an offset point reported as
+  `ok=True`. The window's `(rect.left, rect.top)` screen offset is now threaded
+  from `_default_screenshotter` (returns an `(image, offset)` pair) through
+  `fallback_regions`, which adds it to each OCR region's bbox so click
+  coordinates are screen-absolute.
+- **fix-adapter-partial-trace-non-budget.** `_run_impl`
+  (`adapters/__init__.py:103`, the body of the LangChain `UiaRunTool` and the
+  MCP `uia_run` tool) only caught `AgentBudgetExceeded`. Any other
+  run-aborting exception (`SnapshotError` when the window vanishes mid-run,
+  the LLM refusal `RuntimeError`) propagated and discarded the whole buffered
+  `lines` trace — asymmetric with the CLI, which streams each step live before
+  its generic `[error]` exit. The `except` is broadened to catch any
+  run-aborting error, append a trailing `[error]` line, and return the joined
+  partial trace, completing the v0.5.0 trace-preservation contract to all
+  run-aborting paths.
+
+[0.7.0]: https://github.com/SuperMarioYL/uia-agent/releases/tag/v0.7.0
+
 ## [0.3.0] — 2026-07-17
 
 Exposes the uia-agent action space over MCP (the committed `v0.3 — MCP server`

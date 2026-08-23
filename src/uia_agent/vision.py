@@ -149,8 +149,14 @@ class TesseractEngine:
         return out
 
 
-def _default_screenshotter(app: str) -> Any:
-    """Grab a screenshot of the focused window for ``app`` (lazy, optional)."""
+def _default_screenshotter(app: str) -> tuple[Any, tuple[int, int]]:
+    """Grab a screenshot of the focused window for ``app`` (lazy, optional).
+
+    Returns an ``(image, (left, top))`` pair where ``(left, top)`` is the
+    window's screen offset. The screenshot is cropped to the window, so the OCR
+    engine returns window-relative coordinates; the caller adds this offset to
+    make click coordinates screen-absolute (see :func:`fallback_regions`).
+    """
     try:
         import uiautomation as auto
     except ImportError as exc:  # pragma: no cover - exercised only without extra
@@ -165,7 +171,28 @@ def _default_screenshotter(app: str) -> Any:
     capture = getattr(auto, "GetScreenshot", None) or getattr(auto, "Capture", None)
     if capture is None:  # pragma: no cover - depends on uiautomation build
         raise VisionUnavailable("uiautomation build exposes no screenshot helper")
-    return capture(rect) if rect is not None else capture()
+    if rect is not None:
+        offset = (int(rect.left), int(rect.top))
+        image = capture(rect)
+    else:
+        # No window rect: capture the full virtual screen so OCR coords are
+        # already screen-absolute — no offset to add.
+        offset = (0, 0)
+        image = capture()
+    return image, offset
+
+
+def _split_shot(shot: Any) -> tuple[Any, tuple[int, int]]:
+    """Unpack a screenshotter return into ``(image, offset)``.
+
+    A screenshotter may return either a bare image (offset assumed ``(0, 0)`` —
+    the case for stubbed screenshotters in tests) or an ``(image, offset)``
+    pair where ``offset`` is the window's ``(left, top)`` screen coordinate.
+    """
+    if isinstance(shot, tuple):
+        image, offset = shot
+        return image, offset
+    return shot, (0, 0)
 
 
 def fallback_regions(
@@ -178,9 +205,41 @@ def fallback_regions(
 
     Both the OCR engine and the screenshotter are injectable so the decision
     path is unit-testable with no native dependencies. In production both
-    default to the lazy Tesseract / uiautomation implementations.
+    default to the lazy Tesseract / uiautomation implementations. The returned
+    region bboxes are screen-absolute: the window's screen offset (threaded
+    from the screenshotter) is added to the OCR engine's window-relative
+    coordinates so a window not at screen origin gets clicks on target.
     """
     shoot = screenshotter or _default_screenshotter
     engine = ocr or TesseractEngine()
-    image = shoot(app)
-    return engine.regions(image)
+    # Guard the screenshot step that feeds OCR — symmetric with the
+    # TesseractEngine.regions guard above. _default_screenshotter raises
+    # VisionUnavailable when the uiautomation build exposes no screenshot
+    # helper or there is no live Windows session; that exception must degrade
+    # to an empty region list so run falls through to the LLM step, instead of
+    # crashing the whole run (the v0.4.0 contract for any vision-step failure).
+    try:
+        shot = shoot(app)
+    except Exception as exc:  # noqa: BLE001 - screenshot helper missing / no session
+        _log.warning(
+            "vision screenshot unavailable (shoot failed: %s); "
+            "degrading to the LLM step",
+            exc,
+        )
+        return []
+    image, offset = _split_shot(shot)
+    regions = engine.regions(image)
+    # Apply the window's screen offset so OCR (window-relative) coordinates
+    # become screen-absolute before the agent clicks them — a window not at
+    # screen origin (0, 0) would otherwise receive a silently offset click.
+    if offset == (0, 0):
+        return regions
+    ox, oy = offset
+    return [
+        TextRegion(
+            text=r.text,
+            bbox=(r.bbox[0] + ox, r.bbox[1] + oy, r.bbox[2] + ox, r.bbox[3] + oy),
+            confidence=r.confidence,
+        )
+        for r in regions
+    ]
