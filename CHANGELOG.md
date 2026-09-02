@@ -4,6 +4,43 @@ All notable changes to **uia-agent** are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] — 2026-09-02
+
+Two `type:fix` milestones hardening the shipped v0.7.0 source — both grounded
+at file:line and verified by revert-able regression tests. The UIA-first happy
+path and the dependency-free core are unchanged; every fix is a targeted guard
+closing a contract gap the v0.7.0 (and v0.4.0) fixes left open.
+
+### Fixed
+
+- **fix-vision-click-crash.** `_vision_fallback_event` (`agent.py:109`)
+  called `click_point(x, y)` unguarded. The v0.7.0 fix hardened the vision
+  screenshot step (`vision.py:221`) and the OCR step (`vision.py:117-125`) so
+  any failure degrades to the LLM step — the v0.4.0 contract that a
+  vision-step failure must degrade — but the click that consumes the OCR region
+  was the last unguarded step: `click_point` (`actions.py:220-231`) calls
+  `auto.Click` with no try/except, and the failure propagated uncaught through
+  `run`'s vision branch to the CLI's generic `[error]` exit, aborting the
+  whole multi-step run on the first failed vision click. The call is now
+  wrapped (logged, never silent) so a click failure returns `None` and the run
+  falls through to the LLM step, completing the degrade contract to the click
+  action itself — symmetric with the screenshot/OCR guards.
+- **fix-key-sendkeys-unguarded.** `_do_key` (`actions.py:269`) called
+  `auto.SendKeys(text, waitTime=0.0)` unguarded — the only dispatch helper
+  whose native call was not wrapped after the v0.7.0 fix. Unlike `_do_type`
+  (whose SendKeys input is escaped by `escape_sendkeys` to well-formed
+  grammar), `_do_key` passes the LLM's raw text straight to SendKeys, so a
+  malformed key sequence (an unbalanced brace or unknown key name) or any
+  uiautomation runtime error raised a raw exception that propagated past
+  `run`'s `ActionError`-only catch and aborted the whole run — asymmetric
+  with `_do_click`/`_do_select`/`_do_expand`. The call is now wrapped in
+  `try/except` raising a recoverable `ActionError(f"SendKeys failed for key
+  {text!r}: {exc}") from exc`, so a failed shortcut becomes a per-step error
+  the LLM can correct next turn. `_do_type` is intentionally left as-is: its
+  failure is not evidenced.
+
+[0.8.0]: https://github.com/SuperMarioYL/uia-agent/releases/tag/v0.8.0
+
 ## [0.7.0] — 2026-08-23
 
 Four `type:fix` milestones hardening the shipped v0.6.0 source — all grounded

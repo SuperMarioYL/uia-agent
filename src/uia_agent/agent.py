@@ -11,6 +11,7 @@ A plain Python while-loop, no framework. Each step:
 
 from __future__ import annotations
 
+import logging
 import time
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
@@ -22,6 +23,8 @@ from .actions import Action, ActionError, ActionResult, click_point, dispatch
 from .llm import LLMClient, default_client
 from .prompts import system_prompt, user_turn
 from .uia_tree import UIANode, snapshot, to_json
+
+_log = logging.getLogger("uia_agent.agent")
 
 MAX_STEPS_DEFAULT = 25
 SETTLE_SECONDS = 0.4
@@ -106,7 +109,24 @@ def _vision_fallback_event(
         text=None,
         reason=f"UIA tree had no actionable nodes; clicking OCR region {region.text!r}",
     )
-    result = click_point(x, y)
+    # Guard the click that consumes the OCR region — the last unguarded vision
+    # step. auto.Click can raise (an invalid/offscreen coordinate, a COM error,
+    # or any uiautomation internal failure); that raw exception would propagate
+    # uncaught through run's vision branch and abort the whole run, contradicting
+    # the v0.4.0 contract that any vision-step failure must degrade to the LLM
+    # step (the screenshot and OCR steps are already guarded in vision.py).
+    # Logged — never silent — so genuine click bugs surface in the run log. The
+    # failed coordinate was already appended to clicked_points above, so it is
+    # recorded as seen and not retried (a click that fails on a coordinate will
+    # fail again on retry).
+    try:
+        result = click_point(x, y)
+    except Exception as exc:  # noqa: BLE001 - click runtime failure degrades to LLM
+        _log.warning(
+            "vision click failed (click_point failed: %s); degrading to the LLM step",
+            exc,
+        )
+        return None
     return StepEvent(index=step, action=action, result=result, error=None)
 
 

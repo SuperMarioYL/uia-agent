@@ -266,7 +266,18 @@ def _do_key(text: str) -> None:
         raise ActionError("key action requires non-empty text (e.g. '{Enter}', '^s')")
     import uiautomation as auto
 
-    auto.SendKeys(text, waitTime=0.0)
+    # Surface a SendKeys failure (a malformed key sequence the LLM emitted, or any
+    # uiautomation runtime error) as a recoverable ActionError — mirroring
+    # _do_click's Invoke guard and _do_select/_do_expand — so agent.run's
+    # ActionError catch turns it into a per-step error the LLM can correct next
+    # turn, instead of a raw exception that propagates past the ActionError-only
+    # catch and aborts the whole run. Unlike _do_type, the `key` action passes
+    # the LLM's raw text straight to SendKeys (no escape_sendkeys), so a
+    # malformed shortcut is a realistic failure here.
+    try:
+        auto.SendKeys(text, waitTime=0.0)
+    except Exception as exc:
+        raise ActionError(f"SendKeys failed for key {text!r}: {exc}") from exc
 
 
 def dispatch(action: Action, snapshot_root: UIANode, app: str) -> ActionResult:
