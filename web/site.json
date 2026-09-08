@@ -211,5 +211,6 @@
         "code": "# On Windows, in a fully installed environment:\nuia-agent dump --app Notepad --indent 0\nuia-agent run --app Calculator --max-steps 15 \"Compute 17 * 23\""
       }
     ]
-  }
+  },
+  "content_version": "0.8.0"
 }
