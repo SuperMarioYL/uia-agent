@@ -1,108 +1,215 @@
 {
-  "schema": 1,
-  "content_version": "0.8.0",
-  "generated_at": "2026-09-02",
+  "schema": 3,
   "name": "uia-agent",
   "github": "https://github.com/SuperMarioYL/uia-agent",
   "host": "uia-agent.lei6393.com",
-  "lang": { "primary": "zh", "toggle": true },
-  "accent": ["#8b5cf6"],
+  "palette": "auto",
+  "lang": {
+    "primary": "en",
+    "toggle": true
+  },
+  "meta": {
+    "visual_style": "neon-particle",
+    "demo_source": "docs/demo-results.json"
+  },
   "hero": {
-    "eyebrow": {
-      "zh": "Windows 桌面软件 · 开源 Apache 2.0 · 自带 API key",
-      "en": "Windows desktop apps · open source Apache 2.0 · bring your own API key"
-    },
     "headline": {
-      "zh": "没 API 的老 Windows 软件\n让 LLM 一句话替你点",
-      "en": "Legacy Windows apps with no API,\ndriven by an LLM in one sentence"
+      "en": "Give desktop automation an inspectable action tree.",
+      "zh": "让桌面自动化使用可检查的动作树。"
     },
     "sub": {
-      "zh": "政企、医疗、制造业还在跑 2008 年的桌面软件——没 API、没 SDK，只能靠人手点鼠标。一句话下达目标，它自己看着界面、点按钮、填表单、存文件，把没人愿意改的老古董软件驱动起来。",
-      "en": "State-owned, hospital, and factory floors still run 2008-era desktop software — no API, no SDK, just humans clicking. State the goal in one sentence; it watches the screen, clicks buttons, fills forms, saves files, and drives the legacy app nobody will replace."
+      "en": "uia-agent snapshots a Windows accessibility tree, prunes it into a compact action frame, and dispatches typed actions through supported UIA patterns.",
+      "zh": "uia-agent 快照 Windows 无障碍树，将其裁剪为紧凑动作帧，并通过支持的 UIA pattern 分发类型化动作。"
     },
-    "command": "uia-agent run --app Notepad \"type a haiku and save as poem.txt\"",
-    "cta": { "zh": "开始使用", "en": "Get started" },
-    "ctaGithub": { "zh": "在 GitHub 查看", "en": "View on GitHub" }
+    "href": "#quickstart"
   },
   "advantages": [
     {
       "title": {
-        "zh": "不用写 selector，也不用记坐标",
-        "en": "No hand-written selectors, no coordinates"
+        "en": "Structured control context",
+        "zh": "结构化控件上下文"
       },
       "body": {
-        "zh": "老软件没有 API，传统自动化只能靠人写死 selector 或录坐标，界面一改就全废。它像人一样看屏幕——认得每个按钮和输入框，界面变了它也找得到，不用你维护脚本。",
-        "en": "Legacy apps have no API, so traditional automation means hand-writing selectors or recording coordinates that break the moment the UI changes. It reads the screen like a human — recognizing every button and field, so when the UI shifts it still finds them. No script maintenance."
-      },
-      "chips": [
-        "› 像人一样认得每个按钮",
-        "› 界面变了不用改脚本"
-      ]
+        "en": "Names, values and supported patterns stay visible.",
+        "zh": "名称、值和支持的 pattern 保持可见。"
+      }
     },
     {
       "title": {
-        "zh": "点的是真按钮，存的是真文件",
-        "en": "Real clicks on real buttons, real saved files"
+        "en": "Bounded snapshots",
+        "zh": "有界快照"
       },
       "body": {
-        "zh": "每一步都落在正在运行的软件上——点的是真实的按钮，填的是真实的输入框，存的是真实的文件，不是截图模拟。一句话目标进去，它一步步点、填、存，直到把事做完；没做成的那一步，它不会报成成功。",
-        "en": "Every step lands on the running app — it clicks the real button, fills the real field, saves the real file, not a screenshot mock. State the goal in one sentence; it clicks, fills, and saves its way to done — and a step that didn't actually happen is never reported as a success."
-      },
-      "chips": [
-        "› 真实点击 / 输入 / 保存",
-        "› 没做成的不报成"
-      ]
+        "en": "Depth and node budgets limit the traversed tree.",
+        "zh": "深度和节点预算限制遍历树。"
+      }
     },
     {
       "title": {
-        "zh": "接进你现有的 AI 工作流",
-        "en": "Plug into your existing AI workflow"
+        "en": "Typed action dispatch",
+        "zh": "类型化动作分发"
       },
       "body": {
-        "zh": "你已经有一套 AI 助手或 agent 框架，不想为桌面软件再搭一套。把桌面软件变成一个可调用的工具，你现有的工作流直接驱动它，不用胶水代码，也不用换技术栈；步数用完时它带回已经做完的部分，而不是把整段跑过的过程丢成一句报错。",
-        "en": "You already have an AI assistant or agent framework — you don't want to rebuild a stack just for desktop apps. Turn the desktop app into a callable tool your existing workflow drives directly, no glue code, no stack swap; and when the step budget runs out it brings back the part it already finished instead of throwing the whole run away as an opaque error."
+        "en": "Actions target UIA patterns through one dispatcher.",
+        "zh": "动作通过统一分发器调用 UIA pattern。"
+      }
+    }
+  ],
+  "demo": {
+    "title": {
+      "en": "Run it on a complete example",
+      "zh": "运行完整示例"
+    },
+    "note": {
+      "en": "The portable example provides three fake controls to the production snapshot walker and checks which two remain.",
+      "zh": "可移植示例向生产快照遍历器提供三个假控件，检查最终保留的两个节点。"
+    },
+    "source": "https://github.com/SuperMarioYL/uia-agent/blob/main/docs/demo-results.json",
+    "steps": [
+      {
+        "label": "Recorded run",
+        "body": "Production UIA tree pruning and stable snapshot IDs on a complete fake control tree. No Windows desktop, native UI action or model call is exercised.",
+        "command": ".venv/bin/python examples/presentation-demo.py",
+        "output": "input nodes: 3\nretained nodes: 2\nretained: Button Save ['Invoke']\nstable snapshot IDs: True",
+        "image": "/assets/presentation/demo-0-light.svg",
+        "imageDark": "/assets/presentation/demo-0-dark.svg"
+      }
+    ]
+  },
+  "quickstart": {
+    "title": {
+      "en": "Try it locally",
+      "zh": "本地上手"
+    },
+    "body": {
+      "en": "The portable example provides three fake controls to the production snapshot walker and checks which two remain.",
+      "zh": "可移植示例向生产快照遍历器提供三个假控件，检查最终保留的两个节点。"
+    },
+    "steps": [
+      {
+        "title": {
+          "en": "Install from source",
+          "zh": "从源码安装"
+        },
+        "code": "git clone https://github.com/SuperMarioYL/uia-agent.git\ncd uia-agent\nuv venv .venv\nuv pip install --python .venv/bin/python pydantic\nuv pip install --python .venv/bin/python --no-deps -e ."
       },
-      "chips": [
-        "› 桌面软件变成可调用工具",
-        "› 不用胶水代码",
-        "› 步数用完也带回已做的"
-      ]
+      {
+        "title": {
+          "en": "Run the included example",
+          "zh": "运行随仓示例"
+        },
+        "code": ".venv/bin/python examples/presentation-demo.py"
+      }
+    ]
+  },
+  "limitations": [
+    {
+      "en": "Native automation requires an interactive Windows desktop and applications with useful UIA controls. The offline example cannot validate that environment.",
+      "zh": "原生自动化需要交互式 Windows 桌面，以及具有可用 UIA 控件的应用。离线示例无法验证该环境。"
     },
     {
-      "title": {
-        "zh": "读不到按钮就读屏幕，兜底也不崩",
-        "en": "If it can't read a button, it reads the screen — and the fallback won't crash"
-      },
-      "body": {
-        "zh": "更老的软件自己画控件，界面上一个可点的东西都没有——别的工具直接放弃。它会退回截屏 + 识图，按文字找到最可能的位置点下去。哪怕识图本身起不来，或者目标窗口落在主屏之外，它也不会把整个任务跑崩，而是退回让模型自己看这一步。更难得的是：它公开每个软件的真实成功率，跌破 40% 就自己宣布停项目，不粉饰。",
-        "en": "Older apps paint their own controls, so the screen has nothing clickable — other tools just give up. This one falls back to a screenshot + OCR, finds the most likely spot by text, and clicks it. Even when OCR itself can't run, or the target window sits off the primary screen, it never crashes the whole run — it hands the step back to the model instead. Rarer still: it publishes the real hit-rate per app, and if it drops below 40% it kills the project itself — no spin."
-      },
-      "chips": [
-        "› 截屏 + 识图兜底",
-        "› 边界窗口 / 识图失灵都不崩",
-        "› 跌破 40% 自宣布停"
-      ]
+      "en": "The demonstration uses a fake control tree and tests pruning only; it does not click, type, call a model or automate a real app.",
+      "zh": "演示使用假控件树，只测试裁剪，不点击、输入、调用模型或自动操作实际应用。"
+    },
+    {
+      "en": "Model-driven actions can change application data. A model-reported done action is not independent proof that the user’s goal succeeded.",
+      "zh": "模型驱动操作可能改变应用数据。模型报告 done 不等于目标已被独立验证完成。"
     }
   ],
   "scene": {
-    "kind": "hub-nodes",
-    "nodes": ["Notepad", "Calculator", "Settings", "WinForms ERP", "SAP GUI"]
+    "kind": "neon-graph",
+    "fallback": "/assets/presentation/scene-dark.svg",
+    "fallbackLight": "/assets/presentation/scene-light.svg"
   },
-  "cta": {
-    "headline": {
-      "zh": "给那些没人愿意改的桌面软件，一条出路",
-      "en": "A way out for the desktop software no one will fix"
+  "story": {
+    "intro": {
+      "title": {
+        "en": "A concrete task",
+        "zh": "从实际任务出发"
+      },
+      "body": {
+        "en": "Legacy desktop applications often expose accessible controls even when no application API is available. A tree of named controls gives a model a structured place to choose its next action.",
+        "zh": "旧桌面应用即使没有业务 API，也可能暴露无障碍控件。带名称的控件树为模型选择下一步操作提供结构化依据。"
+      }
     },
-    "sub": {
-      "zh": "开源、Apache 2.0、自带 API key。没有云端、不上报数据、没有付费墙——就在你自己有人值守的 Windows 上跑。",
-      "en": "Open source, Apache 2.0, bring your own API key. No cloud, no telemetry, no paywall — runs on your own attended Windows desktop."
-    },
-    "button": { "zh": "在 GitHub 上开始", "en": "Get started on GitHub" }
-  },
-  "footer": {
-    "tag": {
-      "zh": "让 LLM 替你点那些没人愿意改的老 Windows 桌面软件的开源工具",
-      "en": "The open-source tool that lets an LLM drive the legacy Windows desktop apps no one will fix"
-    }
+    "sections": [
+      {
+        "title": {
+          "en": "Follow the operation",
+          "zh": "处理过程"
+        },
+        "body": {
+          "en": "uia_tree walks controls under depth and node budgets and assigns stable IDs. The model adapter returns one Action; actions dispatches it through control patterns. The agent repeats observation and action within its step budget. Optional adapters expose the same workflow to MCP or LangChain.",
+          "zh": "uia_tree 在深度和节点预算内遍历控件并分配稳定 ID。模型适配器返回一个 Action，actions 通过控件 pattern 分发。Agent 在步数预算内重复观察与操作，可选适配器将流程暴露给 MCP 或 LangChain。"
+        },
+        "image": {
+          "light": "/assets/presentation/process-light.svg",
+          "dark": "/assets/presentation/process-dark.svg",
+          "alt": {
+            "en": "Follow the operation",
+            "zh": "处理过程"
+          }
+        }
+      },
+      {
+        "title": {
+          "en": "How uia-agent works",
+          "zh": "uia-agent 的工作方式"
+        },
+        "body": {
+          "en": "uia_tree walks controls under depth and node budgets and assigns stable IDs. The model adapter returns one Action; actions dispatches it through control patterns. The agent repeats observation and action within its step budget. Optional adapters expose the same workflow to MCP or LangChain.",
+          "zh": "uia_tree 在深度和节点预算内遍历控件并分配稳定 ID。模型适配器返回一个 Action，actions 通过控件 pattern 分发。Agent 在步数预算内重复观察与操作，可选适配器将流程暴露给 MCP 或 LangChain。"
+        },
+        "image": {
+          "light": "/assets/presentation/architecture-light.svg",
+          "dark": "/assets/presentation/architecture-dark.svg",
+          "alt": {
+            "en": "How uia-agent works",
+            "zh": "uia-agent 的工作方式"
+          }
+        }
+      },
+      {
+        "title": {
+          "en": "Connect the pieces",
+          "zh": "输入与输出"
+        },
+        "body": {
+          "en": "The following routes are implemented in the source. Choose the input that matches your task and keep the resulting artifact with your project.",
+          "zh": "以下路径已有源码实现。按任务选择输入，并把生成的结果与项目一起保存。"
+        },
+        "image": {
+          "light": "/assets/presentation/integrations-light.svg",
+          "dark": "/assets/presentation/integrations-dark.svg",
+          "alt": {
+            "en": "Connect the pieces",
+            "zh": "输入与输出"
+          }
+        }
+      }
+    ],
+    "details": [
+      {
+        "title": {
+          "en": "Configuration",
+          "zh": "配置"
+        },
+        "body": {
+          "en": "For the portable tree example, only pydantic and the source package are needed; the setup below intentionally uses --no-deps. For native Windows automation, install the full package with python -m pip install -e . in a Windows environment. ANTHROPIC_API_KEY or OPENAI_API_KEY provides credentials; UIA_AGENT_PROVIDER and UIA_AGENT_MODEL select the provider/model. Windows venv Python is .venv\\Scripts\\python.exe.",
+          "zh": "可移植树示例仅需 pydantic 与源码包，因此下方安装明确使用 --no-deps。实际 Windows 自动化应在 Windows 环境执行 python -m pip install -e . 安装完整依赖。ANTHROPIC_API_KEY 或 OPENAI_API_KEY 提供凭据，UIA_AGENT_PROVIDER 与 UIA_AGENT_MODEL 选择提供方/模型。Windows 虚拟环境解释器路径为 .venv\\Scripts\\python.exe。"
+        }
+      },
+      {
+        "title": {
+          "en": "Further use",
+          "zh": "进一步使用"
+        },
+        "body": {
+          "en": "The CLI exposes the following operations. Commands after the example use your own paths or identifiers.",
+          "zh": "CLI 提供以下操作。示例之外的命令需要替换成你的文件路径或标识。"
+        },
+        "code": "# On Windows, in a fully installed environment:\nuia-agent dump --app Notepad --indent 0\nuia-agent run --app Calculator --max-steps 15 \"Compute 17 * 23\""
+      }
+    ]
   }
 }

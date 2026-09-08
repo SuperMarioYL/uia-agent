@@ -1,0 +1,78 @@
+{
+  "name": "uia-agent",
+  "tagline": "Give desktop automation an inspectable action tree.",
+  "architecture": {
+    "title": "How uia-agent works",
+    "nodes": [
+      {
+        "title": "UIA snapshot",
+        "detail": "src/uia_agent/uia_tree.py"
+      },
+      {
+        "title": "Action frame",
+        "detail": "Pruned control tree"
+      },
+      {
+        "title": "Model action",
+        "detail": "src/uia_agent/llm.py"
+      },
+      {
+        "title": "UIA dispatch",
+        "detail": "src/uia_agent/actions.py"
+      }
+    ],
+    "edges": [
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        2,
+        3
+      ]
+    ]
+  },
+  "process": {
+    "title": "From input to a useful result",
+    "steps": [
+      {
+        "title": "Supply controls",
+        "detail": "Window, empty pane, button"
+      },
+      {
+        "title": "Prune tree",
+        "detail": "Drop the unnamed noise leaf"
+      },
+      {
+        "title": "Inspect frame",
+        "detail": "Keep Save and stable IDs"
+      }
+    ],
+    "result": "The three-node fake tree becomes a two-node frame containing the named Save button."
+  },
+  "integrations": {
+    "title": "Supported input and output routes",
+    "items": [
+      {
+        "title": "Windows UIA",
+        "detail": "Native accessibility control patterns"
+      },
+      {
+        "title": "Anthropic / OpenAI",
+        "detail": "Configured model action providers"
+      },
+      {
+        "title": "MCP / LangChain",
+        "detail": "Optional framework adapters"
+      },
+      {
+        "title": "OCR fallback",
+        "detail": "Optional vision extra and Tesseract"
+      }
+    ]
+  }
+}

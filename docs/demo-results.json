@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "source_revision": "927ee4e5a60fe19643adaf800b17c13f28cc66fb",
+  "scope": "Production UIA tree pruning and stable snapshot IDs on a complete fake control tree. No Windows desktop, native UI action or model call is exercised.",
+  "steps": [
+    {
+      "label": "Recorded run",
+      "body": "Production UIA tree pruning and stable snapshot IDs on a complete fake control tree. No Windows desktop, native UI action or model call is exercised.",
+      "command": ".venv/bin/python examples/presentation-demo.py",
+      "output": "input nodes: 3\nretained nodes: 2\nretained: Button Save ['Invoke']\nstable snapshot IDs: True"
+    }
+  ]
+}

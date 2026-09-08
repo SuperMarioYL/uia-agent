@@ -1,209 +1,126 @@
-[English](./README.en.md) **·** [简体中文](./README.md)
+[English](./README.en.md) · [Website](https://uia-agent.lei6393.com) · [GitHub](https://github.com/SuperMarioYL/uia-agent)
 
-<p align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=JetBrains+Mono&weight=600&size=26&pause=1000&color=8B5CF6&center=true&vCenter=true&width=720&lines=uia-agent;%E7%94%A8+LLM+%E9%A9%B1%E5%8A%A8+Windows+%E8%80%81%E5%8F%A4%E8%91%A3%E6%A1%8C%E9%9D%A2%E8%BD%AF%E4%BB%B6;UIA+%E6%97%A0%E9%9A%9C%E7%A2%8D%E6%A0%91+%E2%86%92+LLM+%E2%86%92+%E7%9C%9F%E5%AE%9E%E7%82%B9%E5%87%BB%2F%E8%BE%93%E5%85%A5%2F%E4%BF%9D%E5%AD%98" alt="uia-agent" />
-</p>
+<picture>
+  <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="./assets/presentation/hero-mobile-dark.svg">
+  <source media="(max-width: 600px)" srcset="./assets/presentation/hero-mobile-light.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="./assets/presentation/hero-dark.svg">
+  <img src="./assets/presentation/hero-light.svg" width="960" alt="Hero diagram">
+</picture>
 
-<p align="center">
-  <a href="./LICENSE"><img alt="许可证" src="https://img.shields.io/badge/license-Apache--2.0-2E7D32"></a>
-  <a href="https://github.com/supermario-leo/uia-agent/releases"><img alt="版本" src="https://img.shields.io/github/v/release/SuperMarioYL/uia-agent?color=8B5CF6"></a>
-  <img alt="Python" src="https://img.shields.io/badge/python-3.12%2B-3776AB">
-  <img alt="平台" src="https://img.shields.io/badge/platform-windows--only-0078D6">
-  <a href="https://github.com/supermario-leo/uia-agent/actions"><img alt="CI" src="https://img.shields.io/badge/ci-passing-2E7D32"></a>
-  <img alt="行动空间" src="https://img.shields.io/badge/Action--Space-UIA%20%E6%A0%91-EC4899">
-</p>
+# uia-agent
 
-> **uia-agent 是一个开源 LLM agent 框架，用 UIA 无障碍树驱动 Windows 老古董桌面软件。**
-> 浏览器场景有 [browser-use](https://github.com/browser-use/browser-harness)，
-> 桌面场景这块一直没人认真做。这就是这块。
+**让桌面自动化使用可检查的动作树。**
 
-## 为什么这个东西现在才出现
+uia-agent 快照 Windows 无障碍树，将其裁剪为紧凑动作帧，并通过支持的 UIA pattern 分发类型化动作。
 
-国内做政企、医疗、制造业开发的同行心里都清楚：
+## 为什么需要它
 
-- 2008 年的 WinForms ERP、SAP GUI 客户端、SCADA 控制台、各种"绝对不能换"的 in-house 桌面软件，至今还在被人**手动**点鼠标驱动。
-- 这些软件**没有 API**、**没有 SDK**、**没有官方自动化通道**。UiPath 这种 RPA 工具能用，但写脚本的成本几乎和招实习生手动操作差不多。
-- 现在 Claude 4.x / GPT-5 这一代模型，多步工具调用的稳定性终于够了；`pywinauto` 和 `uiautomation` 这两个 Python 绑定也在最近 18 个月内追上了 .NET 版本的能力。
+旧桌面应用即使没有业务 API，也可能暴露无障碍控件。带名称的控件树为模型选择下一步操作提供结构化依据。
 
-把这三个时间窗一对齐，结论很自然：**把 UIA 无障碍树当成 LLM agent 的 action space**，让模型每一步只输出一个结构化的 `Action`，由代码确定性地分发回 UIA。和 browser-use 同一个套路，只是把"DOM"换成了"UIA 树"。
+- **结构化控件上下文** — 名称、值和支持的 pattern 保持可见。
+- **有界快照** — 深度和节点预算限制遍历树。
+- **类型化动作分发** — 动作通过统一分发器调用 UIA pattern。
 
-## 目录
+## 架构
 
-- [架构](#架构)
-- [快速上手](#快速上手)
-- [演示](#演示)
-- [它实际做了什么](#它实际做了什么)
-- [和现有方案对比](#和现有方案对比)
-- [配置](#配置)
-- [进阶用法](#进阶用法)
-- [路线图](#路线图)
-- [Benchmark 成绩单](./BENCHMARK.md)
-- [诚实的局限](#诚实的局限)
-- [相关项目](#相关项目)
-- [许可证 + 贡献](#许可证--贡献)
+<picture>
+  <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="./assets/presentation/architecture-mobile-dark.svg">
+  <source media="(max-width: 600px)" srcset="./assets/presentation/architecture-mobile-light.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="./assets/presentation/architecture-dark.svg">
+  <img src="./assets/presentation/architecture-light.svg" width="960" alt="Architecture diagram">
+</picture>
 
-## <img src="https://api.iconify.design/tabler/topology-star-3.svg?color=%238B5CF6" width="20" height="20" align="center" /> 架构
+uia_tree 在深度和节点预算内遍历控件并分配稳定 ID。模型适配器返回一个 Action，actions 通过控件 pattern 分发。Agent 在步数预算内重复观察与操作，可选适配器将流程暴露给 MCP 或 LangChain。
 
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./assets/atlas-dark.svg">
-    <source media="(prefers-color-scheme: light)" srcset="./assets/atlas-light.svg">
-    <img src="./assets/atlas-light.svg" width="880" alt="自然语言目标进入 Typer CLI，CLI 运行 observe → think → act 循环：每一步快照并剪枝 Windows UIA 树，向 LLM 适配层要一个结构化 Action，再通过真实 UIA 控件模式分发回正在运行的桌面软件">
-  </picture>
-</p>
+| 组件 | 职责 |
+| --- | --- |
+| `UIA snapshot` | src/uia_agent/uia_tree.py |
+| `Action frame` | Pruned control tree |
+| `Model action` | src/uia_agent/llm.py |
+| `UIA dispatch` | src/uia_agent/actions.py |
 
-自然语言目标进入 **Typer CLI**（`run`），CLI 启动 **agent 循环**：① *observe* — 快照当前焦点窗口的 UIA 树并剪枝到 ≤400 节点；② *think* — 把序列化后的树交给 **LLM 适配层**（Anthropic tool-use 或 OpenAI JSON-schema），拿回恰好一个结构化 `Action`；③ *act* — 通过真实 UIA 控件模式（Invoke / Value / SelectionItem / ExpandCollapse）把动作分发回正在运行的 **Windows 软件**；④ *verify* — 流式打出这一步并重新快照。没有服务、没有 daemon、没有 IPC——一个进程跑完，约 700 行 Python。
+## 安装与快速上手
 
-## 快速上手
-
-> 前置：Windows 10/11 交互式桌面会话；`ANTHROPIC_API_KEY` 或 `OPENAI_API_KEY` 至少有一个。
+使用仓库清单指定的运行时版本构建，并在仓库根目录运行示例。
 
 ```bash
-pip install uia-agent
-export ANTHROPIC_API_KEY=sk-ant-...        # 或者 OPENAI_API_KEY=sk-...
-uia-agent run --app Notepad "输入 'hello world'，存到桌面，文件名 hello.txt"
+git clone https://github.com/SuperMarioYL/uia-agent.git
+cd uia-agent
+uv venv .venv
+uv pip install --python .venv/bin/python pydantic
+uv pip install --python .venv/bin/python --no-deps -e .
 ```
 
-完事。agent 会一行一行打出每一步：它选了什么动作、目标节点是哪个、为什么——直到它输出 `done` 或者用完 step 预算为止。
+可移植示例向生产快照遍历器提供三个假控件，检查最终保留的两个节点。
 
-<details>
-<summary>典型输出</summary>
-
-```
-step 01  click   → ee4f3c2a1d80  ✓ clicked Edit:'Document'
-            why: 先把焦点放到编辑区再输入
-step 02  type    → ee4f3c2a1d80  text='hello world'  ✓ typed into Edit:'Document'
-            why: 把用户要的内容写进编辑区
-step 03  key    text='^s'  ✓ sent keys '^s'
-            why: 用快捷键调出"另存为"对话框
-step 04  type    → a182be09f5cc  text='hello.txt'  ✓ typed into Edit:'文件名:'
-            why: 按要求填写文件名
-step 05  click   → 5b1c44e0aa10  ✓ clicked Button:'保存'
-            why: 提交保存
-step 06  done                                  ✓ agent reported done
-            why: 文件已经落盘
+```bash
+.venv/bin/python examples/presentation-demo.py
 ```
 
-</details>
+## 实际运行示例
 
-## <img src="https://api.iconify.design/tabler/photo.svg?color=%238B5CF6" width="20" height="20" align="center" /> 演示
+<picture>
+  <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="./assets/presentation/process-mobile-dark.svg">
+  <source media="(max-width: 600px)" srcset="./assets/presentation/process-mobile-light.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="./assets/presentation/process-dark.svg">
+  <img src="./assets/presentation/process-light.svg" width="960" alt="Process diagram">
+</picture>
 
-一句话进去，agent 先 dump 出 Notepad 剪枝后的 UIA 树，再端到端驱动它——聚焦编辑区、输入、调出"另存为"对话框、填文件名、点保存——全程一行一行流式打出每一步。
+The three-node fake tree becomes a two-node frame containing the named Save button.
 
-<p align="center">
-  <img src="./assets/demo.gif" alt="uia-agent 在 Notepad 上 dump + run 的终端演示" width="820" />
-</p>
+```text
+input nodes: 3
+retained nodes: 2
+retained: Button Save ['Invoke']
+stable snapshot IDs: True
+```
 
-## 它实际做了什么
+完整命令与输出保存在 [docs/demo-results.json](./docs/demo-results.json). 输入和复现代码均随仓提供。
 
-整个项目不到 700 行 Python，承重的就三个文件：
+![已有终端录制](./assets/demo.gif)
 
-| 文件 | 职责 |
-|---|---|
-| [`src/uia_agent/uia_tree.py`](./src/uia_agent/uia_tree.py) | 抓取当前焦点窗口的 UIA 树，剪枝到 ≤400 节点 / ≤12 层深；丢掉离屏 + 无名噪声叶子；给每个节点算一个稳定的 hash id。 |
-| [`src/uia_agent/actions.py`](./src/uia_agent/actions.py) | 7 种有类型的动作（`click` / `type` / `select` / `expand` / `key` / `wait` / `done`），全部走真实 UIA pattern：Invoke、Value、SelectionItem、ExpandCollapse。 |
-| [`src/uia_agent/agent.py`](./src/uia_agent/agent.py) | observe → think → act 循环。一个 `while`，不引入任何 framework，默认 25 步预算。 |
+保留已有录制供参考；上方文字示例给出当前可复现的操作。
 
-新意不在数据结构本身，而在框架：**把 UIA 树看成 LLM agent 的一类 action space**——和 DOM（browser-use）、像素（VLM）、人写的 selector（UiPath）并列。可防御的手艺是剪枝规则：怎么在真实老软件上把序列化后的树压到 8k token 以内，同时保留住所有可点的节点。
+## 用法
 
-## 和现有方案对比
+CLI 提供以下操作。示例之外的命令需要替换成你的文件路径或标识。
 
-每一行都是真比过的，**不是营销话术**：
-
-| | uia-agent | [browser-use](https://github.com/browser-use/browser-harness) | UiPath / Power Automate | VLM 截屏 agent |
-|---|---|---|---|---|
-| 行动空间 | **Windows UIA 树** | DOM | 人写的 selector 脚本 | 原始像素 |
-| 每步成本 | UIA 遍历 + ~3-6k token | DOM 遍历 + 类似量级 | 0（预编译） | ~50× 倍 token（图像输入） |
-| 确定性 | Pattern 分发（Invoke / Value / ...） | DOM event | 高，但 UI 一改就脆 | 低，模型依赖 |
-| 不用人写 selector | ✓ | ✓ | ✗ | ✓ |
-| 跨平台 | ✗（故意只做 Windows） | ✓（任何浏览器） | 部分 | ✓ |
-| OSS + 自带模型 | ✓ MIT | ✓ MIT | ✗ | 因模型而异 |
-
-老实说：browser-use 在跨平台和受众规模上明显赢。uia-agent 赢在那些**真实存在却没人愿意做**的场景——国企/医疗/制造业老 Windows 软件。这是我们故意挑的楔子。
+```bash
+# On Windows, in a fully installed environment:
+uia-agent dump --app Notepad --indent 0
+uia-agent run --app Calculator --max-steps 15 "Compute 17 * 23"
+```
 
 ## 配置
 
-没有配置文件，三个环境变量管全部：
+可移植树示例仅需 pydantic 与源码包，因此下方安装明确使用 --no-deps。实际 Windows 自动化应在 Windows 环境执行 python -m pip install -e . 安装完整依赖。ANTHROPIC_API_KEY 或 OPENAI_API_KEY 提供凭据，UIA_AGENT_PROVIDER 与 UIA_AGENT_MODEL 选择提供方/模型。Windows 虚拟环境解释器路径为 .venv\Scripts\python.exe。
 
-| 变量 | 类型 | 默认值 | 含义 |
-|---|---|---|---|
-| `ANTHROPIC_API_KEY` | string | 未设 | 设了就用 Anthropic。 |
-| `OPENAI_API_KEY` | string | 未设 | 设了就用 OpenAI 作为备选。 |
-| `UIA_AGENT_PROVIDER` | `anthropic` \| `openai` | 自动 | 两个 key 都有时强制选其一。 |
-| `UIA_AGENT_MODEL` | string | 各 provider 默认 | 钉死一个具体模型 id（如 `claude-sonnet-4-6`、`gpt-4o-2024-11-20`）。 |
+## 集成与职责分工
 
-CLI 只有两个子命令：
+<picture>
+  <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="./assets/presentation/integrations-mobile-dark.svg">
+  <source media="(max-width: 600px)" srcset="./assets/presentation/integrations-mobile-light.svg">
+  <source media="(prefers-color-scheme: dark)" srcset="./assets/presentation/integrations-dark.svg">
+  <img src="./assets/presentation/integrations-light.svg" width="960" alt="Integrations diagram">
+</picture>
 
-```bash
-uia-agent dump --app Notepad --indent 0
-uia-agent run  --app Calculator --max-steps 15 "算一下 17 * 23"
-```
+以下路径已有源码实现。按任务选择输入，并把生成的结果与项目一起保存。
 
-## <img src="https://api.iconify.design/tabler/terminal-2.svg?color=%238B5CF6" width="20" height="20" align="center" /> 进阶用法
+| 路径 | 已实现职责 |
+| --- | --- |
+| Windows UIA | Native accessibility control patterns |
+| Anthropic / OpenAI | Configured model action providers |
+| MCP / LangChain | Optional framework adapters |
+| OCR fallback | Optional vision extra and Tesseract |
 
-**视觉兜底（v0.2）。** 老软件经常自己画控件，UIA 树里一个可点的节点都没有。加 `--vision`，当某一步剪枝后的 UIA 树拿不到任何可操作节点时，agent 会截屏 + OCR，按坐标点击置信度最高的文字区域，而不是直接放弃。UIA 优先的快路径不受影响——只要树里还有可点节点，就永远不会走到视觉这条路。需要 OCR 依赖：
+## 限制与后续方向
 
-```bash
-pip install "uia-agent[vision]"          # 装 pytesseract + pillow（系统还需有 Tesseract）
-uia-agent run --app LegacyERP --vision "在主面板点登录"
-```
+- 原生自动化需要交互式 Windows 桌面，以及具有可用 UIA 控件的应用。离线示例无法验证该环境。
+- 演示使用假控件树，只测试裁剪，不点击、输入、调用模型或自动操作实际应用。
+- 模型驱动操作可能改变应用数据。模型报告 done 不等于目标已被独立验证完成。
 
-**框架适配层（v0.2）。** 把 `dump` / `run` 包成现成 agent 框架的 tool。先支持 LangChain，AutoGen / CrewAI 共用同一套 `UiaToolSpec` 形状。核心包保持零依赖，适配层是可选 extras：
+更广应用覆盖需要真实 Windows fixture 与结果验证；OCR 和框架适配器有额外依赖，也需独立验收。
 
-```bash
-pip install "uia-agent[langchain]"
-```
+## 许可与贡献
 
-```python
-from uia_agent.adapters.langchain_tool import UiaDumpTool, UiaRunTool
-
-tools = [UiaDumpTool(), UiaRunTool()]   # 直接喂给任意 LangChain agent
-```
-
-更多示例见 [`examples/`](./examples)。
-
-**MCP server（v0.3）。** 把同一套 `dump` / `run` 暴露成 MCP，让任意 MCP 客户端（Claude Desktop 等）直接驱动桌面软件，无需 LangChain 胶水。核心包保持零依赖，`mcp` SDK 懒加载，是可选 extra：
-
-```bash
-pip install "uia-agent[mcp]"
-uia-agent mcp                      # 起一个 MCP stdio server，暴露 uia_dump + uia_run
-```
-
-## 路线图
-
-- [x] **m1** — `uia-agent dump` 把任意 Windows 焦点窗口的 UIA 树剪枝后打成 JSON。
-- [x] **m2** — `uia-agent run` 跑完 observe → think → act 循环，7 种动作 + 结构化 LLM 输出。
-- [x] **m3** — 自带 Notepad / Calculator demo，README 录屏脚本（vhs），benchmark 脚手架。
-- [x] **v0.2 — 框架适配层** — LangChain 接入（`uia-agent[langchain]`），AutoGen / CrewAI 共用同一套 tool 形状。
-- [x] **v0.2 — 视觉兜底** — UIA 拿不到有效节点时退到 OCR + bbox 点击（`--vision`，`uia-agent[vision]`）。
-- [x] **v0.2 — `BENCHMARK.md` 活的成绩单** — 按 (app × LLM × 版本) 维度的 hit-rate 评测脚手架，每次发版刷新（v0.2.0 先给出参考目标值，待首次真机 Windows 跑测后替换为实测值）。详见 [BENCHMARK.md](./BENCHMARK.md)。
-- [ ] **v0.4 — 多窗口** — 跨两个焦点应用编排（比如 SAP GUI ↔ Excel）；需要 stable_id 方案改动，待真机 Windows CI 信号再启动。
-- [x] **v0.3 — MCP server** — 把这套 action space 暴露成 MCP（`uia-agent[mcp]` + `uia-agent mcp`），任意 MCP 客户端直接驱动桌面软件。
-
-## 诚实的局限
-
-- **只支持 Windows。** macOS 的 Accessibility API、Linux 的 AT-SPI 是完全不同的形状，v0.1 不承诺移植。
-- **只支持有人值守的桌面。** UIA 需要交互式 session，v0.1 不跑无人值守 / 服务器场景。
-- **唯一值得信任的指标是 hit-rate。** 如果你目标软件的 UIA 树本身就坏（节点没名字、没 Invoke、没 Value），UIA 这条路救不了你——这正是 `--vision` OCR 兜底要补的场景。[BENCHMARK.md](./BENCHMARK.md) 给出了 5 个参考应用按 (app × LLM × 版本) 维度的 hit-rate（v0.2.0 先是 83% 的参考目标值，待首次真机 Windows 跑测后替换为实测值）；如果实测均值哪天跌破 40%，我们会自己宣布 kill 项目而不是粉饰。
-- **API key 自带。** 没有云端 runner、没有 telemetry、没有付费层。v0.1 就是 MIT + BYO。
-
-## 相关项目
-
-- [browser-use/browser-harness](https://github.com/browser-use/browser-harness) — 同样的 LLM-驱动 UI 树的范式，只不过 target 是 DOM。uia-agent 是它的桌面补集。
-- [HKUDS/nanobot](https://github.com/HKUDS/nanobot) — agentic action-space 方向比较新的研究工作；他们在 DOM 类目标上的抽象，搬到 UIA 上是吻合的。
-- [pywinauto](https://github.com/pywinauto/pywinauto) / [uiautomation](https://github.com/yinkaisheng/Python-UIAutomation-for-Windows) — 让这个 700 行的小项目能跑起来的真正功臣，所有 Windows 交互的脏活累活都是它们扛的。
-
-## 许可证 + 贡献
-
-MIT，详见 [LICENSE](./LICENSE)。欢迎 PR；超过单屏改动的修改建议先开 issue 对一下范围。
-
-推到 GitHub 之后顺手设一下 topic，让发现路径正常：
-
-```bash
-gh repo edit --add-topic agent --add-topic windows --add-topic uia \
-              --add-topic llm --add-topic accessibility
-```
-
----
-
-<p align="center"><sub><a href="./LICENSE">MIT</a> © 2026 SuperMarioYL</sub></p>
+许可见 [LICENSE](./LICENSE). 反馈问题时请提供最小输入、执行命令和实际输出。
