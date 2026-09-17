@@ -203,8 +203,28 @@ def test_value_pattern_value_is_captured() -> None:
 def test_live_notepad_snapshot_under_token_budget() -> None:  # pragma: no cover
     """Integration test — only runs in the Windows CI matrix job."""
     pytest.importorskip("uiautomation")
-    from uia_agent.uia_tree import snapshot
+    import shutil
+    import subprocess
+    import time
 
-    snap = snapshot("Notepad")
-    assert count_nodes(snap) <= MAX_NODES
-    assert len(to_json(snap)) < 32_000  # ~8k tokens at 4 chars/token
+    from uia_agent.uia_tree import SnapshotError, snapshot
+
+    # The runner has no Notepad window open — the test launches its own and
+    # waits for it to appear, otherwise snapshot("Notepad") can only fail.
+    notepad = shutil.which("notepad") or shutil.which("notepad.exe")
+    if not notepad:
+        pytest.skip("notepad.exe not available on this machine")
+    proc = subprocess.Popen([notepad])
+    try:
+        snap = None
+        for _ in range(20):  # up to ~4s for the window to map
+            try:
+                snap = snapshot("Notepad")
+                break
+            except SnapshotError:
+                time.sleep(0.2)
+        assert snap is not None, "Notepad window never appeared"
+        assert count_nodes(snap) <= MAX_NODES
+        assert len(to_json(snap)) < 32_000  # ~8k tokens at 4 chars/token
+    finally:
+        proc.terminate()

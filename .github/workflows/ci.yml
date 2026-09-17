@@ -41,6 +41,10 @@ jobs:
         run: |
           uv venv
           uv pip install --no-deps anthropic "openai>=1.50" "typer>=0.12" "pydantic>=2.8" pytest
+          # ruff is needed by the Lint step below; the --no-deps core subset
+          # never pulls it in, and `uv run` without a lockfile will not install
+          # it either ("Failed to spawn: ruff").
+          uv pip install ruff
           uv pip install -e . --no-deps
 
       - name: Install dependencies (Windows — full)

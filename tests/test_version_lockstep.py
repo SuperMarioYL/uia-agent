@@ -25,7 +25,9 @@ def _norm(version: str) -> str:
 
 def test_pyproject_version_matches_package() -> None:
     match = re.search(
-        r'^version\s*=\s*"([^"]+)"', (ROOT / "pyproject.toml").read_text(), re.M
+        r'^version\s*=\s*"([^"]+)"',
+        (ROOT / "pyproject.toml").read_text(encoding="utf-8"),
+        re.M,
     )
     assert match, "no version field in pyproject.toml"
     assert _norm(match.group(1)) == _norm(__version__)
@@ -35,7 +37,9 @@ def test_site_json_content_version_matches_package() -> None:
     site = ROOT / "web" / "site.json"
     if not site.exists():
         pytest.skip("no web/site.json in this checkout")
-    data = json.loads(site.read_text())
+    # site.json contains UTF-8 Chinese copy — an unencoded read_text() decodes
+    # with the Windows locale codepage (cp1252) and blows up on the runner.
+    data = json.loads(site.read_text(encoding="utf-8"))
     # site.json carries the version twice (meta.content_version and a
     # top-level content_version); both must agree with the package.
     meta = data.get("meta") or {}
