@@ -40,11 +40,12 @@ jobs:
         if: matrix.os != 'windows-latest'
         run: |
           uv venv
-          uv pip install --no-deps anthropic "openai>=1.50" "typer>=0.12" "pydantic>=2.8" pytest
-          # ruff is needed by the Lint step below; the --no-deps core subset
-          # never pulls it in, and `uv run` without a lockfile will not install
-          # it either ("Failed to spawn: ruff").
-          uv pip install ruff
+          # The core libs + test tooling install WITH their (cross-platform)
+          # deps — pytest needs pluggy/iniconfig, pydantic needs pydantic-core,
+          # and a --no-deps list breaks both at import time. Only the project
+          # itself is installed --no-deps: its uiautomation/pywinauto pins are
+          # Windows-only and must not resolve on Linux.
+          uv pip install anthropic "openai>=1.50" "typer>=0.12" "pydantic>=2.8" pytest ruff
           uv pip install -e . --no-deps
 
       - name: Install dependencies (Windows — full)
