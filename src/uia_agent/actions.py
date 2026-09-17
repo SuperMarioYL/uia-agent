@@ -158,7 +158,19 @@ def _do_click(control: Any) -> None:
     try:
         click(simulateMove=False)
     except TypeError:
-        click()
+        # older uiautomation signatures take no kwargs — retry positionally bare
+        try:
+            click()
+        except Exception as exc:
+            raise ActionError(f"Click failed on {control!r}: {exc}") from exc
+    except ActionError:
+        raise
+    except Exception as exc:
+        # A COM failure (control vanished between resolve and click) must become
+        # a recoverable per-step error the LLM can correct next turn — the same
+        # contract every other native call in dispatch already follows. This
+        # fallback Click is the last unguarded native call in the dispatch path.
+        raise ActionError(f"Click failed on {control!r}: {exc}") from exc
 
 
 # `uiautomation.SendKeys` treats these characters as the start of a special

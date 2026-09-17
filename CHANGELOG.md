@@ -4,6 +4,38 @@ All notable changes to **uia-agent** are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] — 2026-09-18
+
+Fix-led release from the post-ship source + CI review: main's CI is green
+again, and the coordinate-Click fallback becomes the last guarded native call
+in the dispatch path.
+
+### Fixed
+
+- **fix-ci-uv-cache-lockfile.** `ci.yml` installs uv via `astral-sh/setup-uv@v3`
+  with `enable-cache: true`; setup-uv's cache keys off `[**/uv.lock]` and
+  hard-fails when no lockfile exists — every push to main since 2026-09-08 had
+  a red check on both matrix legs. The cache now keys on `pyproject.toml`
+  (`cache-dependency-glob`); committing a real `uv.lock` was rejected because
+  the Windows-only `uiautomation`/`pywinauto` pins and the per-OS dependency
+  subsets make a cross-platform lock fragile.
+- **fix-click-fallback-guard.** `_do_click`'s coordinate-Click fallback
+  (`actions.py`) caught only `TypeError` (the older-signature retry), so a COM
+  failure — control vanished between resolve and click — propagated raw;
+  `agent.run` catches only `ActionError`, so one dead pattern-less control
+  aborted the whole multi-step run at the CLI's generic `[error]` exit. The
+  fallback now raises `ActionError` on any non-`TypeError` failure (including
+  inside the positional retry), making it a per-step error the LLM corrects
+  next turn — the same contract the Invoke / Select / Expand / SendKeys /
+  vision-click guards already hold.
+
+### Quality
+
+- **quality-version-lockstep-test.** `tests/test_version_lockstep.py` pins
+  `__version__`, `pyproject.toml` and `web/site.json` (both `meta.content_version`
+  and the top-level `content_version`) to the same version, so no future bump
+  can land half-done.
+
 ## [0.8.0] — 2026-09-02
 
 Two `type:fix` milestones hardening the shipped v0.7.0 source — both grounded

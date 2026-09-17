@@ -46,8 +46,12 @@ def test_pyproject_version_is_current() -> None:
     with _PYPROJECT.open("rb") as fh:
         data = tomllib.load(fh)
     # v0.4.0 bumped the stale 0.3.0 metadata; each subsequent release keeps it
-    # current — v0.8.0 ships two contract-gap guards (vision click + key SendKeys).
-    assert data["project"]["version"] == "0.8.0"
+    # current. Pinned to __version__ (not a hardcoded literal) so this test can
+    # no longer go stale between releases — tests/test_version_lockstep.py
+    # extends the same guarantee to web/site.json.
+    from uia_agent import __version__
+
+    assert data["project"]["version"] == __version__
 
 
 def test_pyproject_urls_resolve_to_live_repo() -> None:

@@ -27,6 +27,11 @@ jobs:
         uses: astral-sh/setup-uv@v3
         with:
           enable-cache: true
+          # No uv.lock is committed (the Windows-only uiautomation/pywinauto
+          # pins and the per-OS dependency subsets make a cross-platform lock
+          # fragile), so key the cache on the manifest instead — setup-uv
+          # hard-fails on a lockfile glob that matches nothing.
+          cache-dependency-glob: "pyproject.toml"
 
       - name: Set up Python 3.12
         run: uv python install 3.12

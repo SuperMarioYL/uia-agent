@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "uia-agent"
-version = "0.8.0"
+version = "0.9.0"
 description = "Expose Windows UI Automation trees and typed actions to model-driven desktop workflows, with optional MCP, LangChain and OCR adapters."
 readme = "README.md"
 license = { file = "LICENSE" }

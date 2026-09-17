@@ -221,6 +221,41 @@ def test_click_coordinate_fallback_preserved_for_patternless_control() -> None:
     assert clicked == [1]
 
 
+def test_click_coordinate_fallback_failure_becomes_action_error() -> None:
+    # Regression (v0.9.0): the coordinate-Click fallback caught only TypeError
+    # (the older-signature retry), so a COM failure (control vanished between
+    # resolve and click) propagated raw — agent.run catches only ActionError,
+    # so one dead pattern-less control aborted the whole run at the CLI's
+    # generic [error] exit. It must become a per-step ActionError instead,
+    # closing the same contract the Invoke/Select/Expand/SendKeys guards hold.
+    def _com_error() -> None:
+        raise RuntimeError("com_error: element not found")
+
+    control = _FakeControl(click=_com_error)
+    with pytest.raises(ActionError, match="Click failed"):
+        _do_click(control)
+
+
+def test_click_coordinate_fallback_typeerror_retry_still_works() -> None:
+    # The TypeError path (an older uiautomation signature rejecting the
+    # simulateMove kwarg) retries positionally bare and must keep working —
+    # including when the retried call itself fails, which now also degrades
+    # to ActionError instead of propagating raw.
+
+    class _OldSignatureControl:
+        def GetInvokePattern(self):
+            return None
+
+        def GetSelectionItemPattern(self):
+            return None
+
+        def Click(self):  # noqa: ANN001 — no kwargs at all
+            raise RuntimeError("com_error on retry")
+
+    with pytest.raises(ActionError, match="Click failed"):
+        _do_click(_OldSignatureControl())
+
+
 @pytest.mark.windows_only
 def test_live_notepad_click_round_trip() -> None:  # pragma: no cover
     """Integration check — only runs under the Windows CI matrix job."""
