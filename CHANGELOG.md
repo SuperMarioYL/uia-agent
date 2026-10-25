@@ -4,6 +4,46 @@ All notable changes to **uia-agent** are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] — 2026-10-26
+
+Fix-led release from the post-ship artifact + metadata review: the demo GIF the
+README leads with is no longer a traceback, the package metadata declares the
+license the repository actually ships, and the changelog's own version links are
+in lockstep again.
+
+### Fixed
+
+- **fix-demo-workflow-cli-deps.** `demo.yml` installed the CLI with
+  `pip install --no-deps . typer pydantic`; pip's `--no-deps` is a global flag, so
+  it applied to every requirement on the line and stripped `pydantic-core`
+  (pydantic's compiled backend) plus typer's `annotated-doc`/`click`. `uia-agent
+  --help` then died at import, and because `vhs` does not fail on a command's exit
+  code the workflow still went green and committed that traceback into
+  `assets/demo.gif` — the headline image embedded in both READMEs. `--no-deps` is
+  now scoped to the project alone (its `uiautomation`/`pywinauto` pins are
+  Windows-only and must not resolve on the Linux runner); the CLI's cross-platform
+  runtime deps install with their own dependencies.
+- **fix-pyproject-license-classifier.** `pyproject.toml` carried the Trove
+  classifier `License :: OSI Approved :: MIT License` while the shipped `LICENSE`
+  is Apache-2.0 and the `license` field already pointed at that file — so the
+  package metadata told PyPI/GitHub (and any compliance scan) MIT. The classifier
+  is now `License :: OSI Approved :: Apache Software License`.
+- **fix-changelog-version-link-integrity.** The v0.9.0 heading had no `[0.9.0]:`
+  reference definition — the only release heading without one, so GitHub rendered
+  it as literal text — and the 0.1.0/0.2.0/0.3.0 references still pointed at the
+  pre-rename owner `supermario-leo` (HTTP 404). The missing reference is added and
+  the three dead ones now point at the live `SuperMarioYL` owner.
+
+### Quality
+
+- **quality-version-lockstep-changelog.** `tests/test_version_lockstep.py` — which
+  claims "no future version bump can land half-done" — never read `CHANGELOG.md`,
+  which is exactly how the link drift above landed. It now also pins the newest
+  heading to `__version__`, asserts every version heading has a link reference, and
+  asserts every reference points at the live owner.
+
+[0.10.0]: https://github.com/SuperMarioYL/uia-agent/releases/tag/v0.10.0
+
 ## [0.9.0] — 2026-09-18
 
 Fix-led release from the post-ship source + CI review: main's CI is green
@@ -35,6 +75,8 @@ in the dispatch path.
   `__version__`, `pyproject.toml` and `web/site.json` (both `meta.content_version`
   and the top-level `content_version`) to the same version, so no future bump
   can land half-done.
+
+[0.9.0]: https://github.com/SuperMarioYL/uia-agent/releases/tag/v0.9.0
 
 ## [0.8.0] — 2026-09-02
 
@@ -162,7 +204,7 @@ and an error message.
   `pip install uia-agent` — the command that actually reinstalls these core
   dependencies — plus the bare-package fallback.
 
-[0.3.0]: https://github.com/supermario-leo/uia-agent/releases/tag/v0.3.0
+[0.3.0]: https://github.com/SuperMarioYL/uia-agent/releases/tag/v0.3.0
 
 ## [0.2.0] — 2026-06-22
 
@@ -201,7 +243,7 @@ every new capability is an opt-in extra.
   including the headline haiku demo — round-trip byte-for-byte instead of being
   silently corrupted. The Value-pattern path is unaffected.
 
-[0.2.0]: https://github.com/supermario-leo/uia-agent/releases/tag/v0.2.0
+[0.2.0]: https://github.com/SuperMarioYL/uia-agent/releases/tag/v0.2.0
 
 ## [0.1.0] — 2026-05-27
 
@@ -232,4 +274,4 @@ Initial public release. Three milestones land together.
 - `BENCHMARK.md` shape will land alongside the first benchmark run; see
   [README §Roadmap](./README.md#roadmap).
 
-[0.1.0]: https://github.com/supermario-leo/uia-agent/releases/tag/v0.1.0
+[0.1.0]: https://github.com/SuperMarioYL/uia-agent/releases/tag/v0.1.0
